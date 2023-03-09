@@ -1,6 +1,6 @@
 # Reference: https://github.com/marketplace/actions/setup-node-js-environment
 
-name: Truffle Build
+name: CI
 
 on:
   push:
