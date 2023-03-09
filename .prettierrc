@@ -9,6 +9,20 @@
         "singleQuote": false,
         "bracketSpacing": false
       }
+    },
+    {
+      "files": "*.js",
+      "options": {
+        "semi": true,
+        "printWidth": 140,
+        "tabWidth": 2,
+        "useTabs": false,
+        "singleQuote": true,
+        "bracketSpacing": true,
+        "arrowParens": "avoid",
+        "trailingComma": "all",
+        "endOfLine": "auto"
+      }
     }
   ]
 }
