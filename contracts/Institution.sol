@@ -5,14 +5,20 @@ pragma experimental ABIEncoderV2;
 // import "./AcceptanceVoting.sol"
 
 contract Institution {
+  enum institutionState {
+    APPROVED,
+    PENDING, //pending vote
+    REJECTED
+  }
+
   struct institution {
     string name;
     string country;
     string city;
     string latitude;
     string longitude;
+    institutionState state;
     address owner;
-    bool approved;
   }
 
   uint256 public numInstitutions = 0;
@@ -27,7 +33,7 @@ contract Institution {
   // }
 
   /**
-    @dev Require owner only
+    @dev Require contract owner only
    */
   modifier ownerOnly() {
     _;
@@ -37,6 +43,11 @@ contract Institution {
     @dev Require that the institution has been voted on
    */
   modifier votedOnly() {
+    _;
+  }
+
+  modifier validInstitutionId(uint256 instId) {
+    require(instId < numInstitutions, "The institution id is not valid");
     _;
   }
 
@@ -59,27 +70,45 @@ contract Institution {
   function approveInstitution(uint256 instId) public votedOnly {}
 
   //Getters
-  function getInstitutionName(uint256 instId) public view returns (string memory) {
+  function getInstitutionName(
+    uint256 instId
+  ) public view validInstitutionId(instId) returns (string memory) {
     return instituitions[instId].name;
   }
 
-  function getInstitutionCountry(uint256 instId) public view returns (string memory) {
+  function getInstitutionCountry(
+    uint256 instId
+  ) public view validInstitutionId(instId) returns (string memory) {
     return instituitions[instId].country;
   }
 
-  function getInstitutionCity(uint256 instId) public view returns (string memory) {
+  function getInstitutionCity(
+    uint256 instId
+  ) public view validInstitutionId(instId) returns (string memory) {
     return instituitions[instId].city;
   }
 
-  function getInstitutionLatitude(uint256 instId) public view returns (string memory) {
+  function getInstitutionLatitude(
+    uint256 instId
+  ) public view validInstitutionId(instId) returns (string memory) {
     return instituitions[instId].latitude;
   }
 
-  function getInstitutionLongitude(uint256 instId) public view returns (string memory) {
+  function getInstitutionLongitude(
+    uint256 instId
+  ) public view validInstitutionId(instId) returns (string memory) {
     return instituitions[instId].longitude;
   }
 
-  function getInstitutionOwner(uint256 instId) public view returns (address) {
+  function getInstitutionState(
+    uint256 instId
+  ) public view validInstitutionId(instId) returns (institutionState) {
+    return instituitions[instId].state;
+  }
+
+  function getInstitutionOwner(
+    uint256 instId
+  ) public view validInstitutionId(instId) returns (address) {
     return instituitions[instId].owner;
   }
 }
