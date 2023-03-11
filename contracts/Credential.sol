@@ -41,13 +41,15 @@ contract Credential {
 
   /**
     @dev Delete a credential
+    @param credId The id of the credential to delete
    */
-  function deleteCredential() public approvedInstitutionOnly {}
+  function deleteCredential(uint256 credId) public approvedInstitutionOnly {}
 
   /**
     @dev Revoke a credential
+    @param credId The id of the credential to revoke
    */
-  function revokeCredential() public approvedInstitutionOnly {}
+  function revokeCredential(uint256 credId) public approvedInstitutionOnly {}
 
   /**
     @dev View all credentials

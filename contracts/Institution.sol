@@ -2,6 +2,8 @@
 pragma solidity >=0.5.0;
 pragma experimental ABIEncoderV2;
 
+// import "./AcceptanceVoting.sol"
+
 contract Institution {
   struct institution {
     string name;
@@ -15,16 +17,46 @@ contract Institution {
 
   uint256 public numInstitutions = 0;
   mapping(uint256 => institution) public instituitions;
+  address _owner;
 
-  constructor() public {}
+  // AcceptanceVoting acceptanceVotingContract;
+
+  // constructor(AcceptanceVoting acceptanceVotingAddr) public {
+  //   _owner = msg.sender;
+  //   // acceptanceVotingContract = acceptanceVotingAddr;
+  // }
+
+  /**
+    @dev Require owner only
+   */
+  modifier ownerOnly() {
+    _;
+  }
+
+  /**
+    @dev Require that the institution has been voted on
+   */
+  modifier votedOnly() {
+    _;
+  }
 
   /**
     @dev Create an institution
     @return instId The id of the institution that was added
    */
-  function addInstitution() public returns (uint256 instId) {}
+  function addInstitution() public ownerOnly returns (uint256 instId) {}
 
-  function approveInstitution(uint256 instId) public {}
+  /**
+    @dev Delete an institution
+    @param instId The id of the institution to delete
+   */
+  function deleteInstitution(uint256 instId) public ownerOnly {}
+
+  /**
+    @dev Approve an institution
+    @param instId The id of the institution to approve
+   */
+  function approveInstitution(uint256 instId) public votedOnly {}
 
   //Getters
   function getInstitutionName(uint256 instId) public view returns (string memory) {
