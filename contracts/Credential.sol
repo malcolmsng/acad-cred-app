@@ -202,4 +202,51 @@ contract Credential {
   ) public view validCredentialId(credId) returns (address) {
     return credentials[credId].owner;
   }
+
+  //helper method to convert uint256 into string
+  function uint2str(uint256 _i) private pure returns (string memory) {
+    if (_i == 0) {
+        return "0";
+    }
+    uint256 j = _i;
+    uint256 length;
+    while (j != 0) {
+        length++;
+        j /= 10;
+    }
+    bytes memory bstr = new bytes(length);
+    uint256 k = length;
+    while (_i != 0) {
+        k = k-1 ;
+        uint8 temp = uint8(48 + _i % 10);
+        bytes1 b1 = bytes1(temp);
+        bstr[k] = b1;
+        _i /= 10;
+    }
+    return string(bstr);
+  }
+
+  //helper method to convert address into string
+  function addressToString(address _address) private pure returns (string memory) {
+    bytes32 value = keccak256(abi.encodePacked(_address));
+    bytes memory alphabet = "0123456789abcdef";
+    bytes memory str = new bytes(42);
+    str[0] = '0';
+    str[1] = 'x';
+    for (uint256 i = 0; i < 20; i++) {
+        str[2+i*2] = alphabet[uint8(value[i + 12] >> 4)];
+        str[3+i*2] = alphabet[uint8(value[i + 12] & 0x0f)];
+    }
+    return string(str);
+  }
+
+  //helper method to convert credential state into string
+  function credentialStateToString(credentialState _state) private pure returns (string memory) {
+    if (_state == credentialState.ACTIVE) {
+        return "ACTIVE";
+    } else if (_state == credentialState.REVOKED) {
+        return "REVOKED";
+    } 
+  }
+
 }
