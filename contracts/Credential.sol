@@ -204,18 +204,18 @@ contract Credential {
   }
 
   //helper method to convert uint256 into string
-  function uint2str(uint256 _i) private pure returns (string memory) {
+  function uint2str(uint _i) private pure returns (string memory) {
     if (_i == 0) {
         return "0";
     }
-    uint256 j = _i;
-    uint256 length;
+    uint j = _i;
+    uint length;
     while (j != 0) {
         length++;
         j /= 10;
     }
     bytes memory bstr = new bytes(length);
-    uint256 k = length;
+    uint k = length;
     while (_i != 0) {
         k = k-1 ;
         uint8 temp = uint8(48 + _i % 10);
