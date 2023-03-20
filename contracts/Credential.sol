@@ -7,7 +7,9 @@ import "./Institution.sol";
 contract Credential {
   enum credentialState {
     ACTIVE,
-    REVOKED
+    DELETED,
+    REVOKED,
+    EXPIRED
   }
 
   struct credential {
@@ -25,6 +27,20 @@ contract Credential {
   }
 
   event add_credential(
+    address issuer,
+    string issuerName,
+    address owner,
+    string studentName,
+    string courseName
+  );
+  event delete_credential(
+    address issuer,
+    string issuerName,
+    address owner,
+    string studentName,
+    string courseName
+  );
+  event revoke_credential(
     address issuer,
     string issuerName,
     address owner,
@@ -150,20 +166,59 @@ contract Credential {
   }
 
   /**
-    @dev Delete a credential
+    @dev Delete an active credential to edit and reupload a credential
     @param credId The id of the credential to delete
    */
-  function deleteCredential(
-    uint256 credId
-  ) public approvedInstitutionOnly(credId) {}
+  function deleteCredential(uint256 credId) public issuerOnly(credId) {
+    credential memory cred = credentials[credId];
+    require(
+      cred.state != credentialState.DELETED,
+      "Credential has already been deleted."
+    );
+    require(
+      cred.state == credentialState.ACTIVE,
+      "Only active credentials can be deleted."
+    );
+
+    // Lazy deletion, numCredentials does not change
+    cred.state = credentialState.DELETED;
+    credentials[credId] = cred;
+
+    emit delete_credential(
+      msg.sender,
+      cred.issuerName,
+      cred.owner,
+      cred.studentName,
+      cred.courseName
+    );
+  }
 
   /**
     @dev Revoke a credential
     @param credId The id of the credential to revoke
    */
-  function revokeCredential(
-    uint256 credId
-  ) public approvedInstitutionOnly(credId) {}
+  function revokeCredential(uint256 credId) public issuerOnly(credId) {
+    credential memory cred = credentials[credId];
+    require(
+      cred.state != credentialState.REVOKED,
+      "Credential has already been revoked."
+    );
+    require(
+      cred.state == credentialState.ACTIVE,
+      "Only active credentials can be revoked"
+    );
+
+    cred.state = credentialState.REVOKED;
+    credentials[credId] = cred;
+
+    emit revoke_credential(
+      msg.sender,
+      cred.issuerName,
+      cred.owner,
+      cred.studentName,
+      cred.courseName
+    );
+  }
 
   /**
     @dev View all credentials
