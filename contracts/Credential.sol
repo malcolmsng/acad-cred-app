@@ -146,16 +146,13 @@ contract Credential {
     require(student != address(0), "Student address cannot be empty");
 
     // New credential object
-    string memory institutionName = institutionContract.getInstitutionName(
-      institutionId
-    );
     credential memory newCredential = credential(
       studentName,
       studentNumber,
       courseName,
       degreeLevel,
       endorserName,
-      institutionName,
+      institutionContract.getInstitutionName(institutionId),
       issuanceDate,
       expiryDate,
       credentialState.ACTIVE,
@@ -171,10 +168,10 @@ contract Credential {
 
     emit add_credential(
       msg.sender,
-      institutionName,
-      student,
-      studentName,
-      courseName
+      newCredential.issuerName,
+      newCredential.owner,
+      newCredential.studentName,
+      newCredential.courseName
     );
     return newCredentialId; // return new credentialId
   }
