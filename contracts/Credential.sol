@@ -7,7 +7,8 @@ import "./Institution.sol";
 contract Credential {
   enum credentialState {
     ACTIVE,
-    REVOKED
+    REVOKED,
+    EXPIRED
   }
 
   struct credential {
@@ -103,15 +104,49 @@ contract Credential {
   ) public approvedInstitutionOnly(credId) {}
 
   /**
+    @dev Encode a credential into a formatted string
+    @param credId The id of the credential to encode
+  */
+  function encodeCredentialToString(uint256 credId) public view returns (string memory) {
+    credential memory c = credentials[credId];
+    return string(abi.encodePacked(
+        "ID: ", uint256ToString(credId), "\n",
+        "Student Name: ", c.studentName, "\n",
+        "Student Number: ", c.studentNumber, "\n",
+        "Course Name: ", c.courseName, "\n",
+        "Degree Level: ", c.degreeLevel, "\n",
+        "Endorser Name: ", c.endorserName, "\n",
+        "Issuance Date: ", uintToString(c.issuanceDate), "\n",
+        "Expiry Date: ", uintToString(c.expiryDate), "\n",
+        "State: ", credentialStateToString(c.state), "\n",
+        "Issuer: ", addressToString(c.issuer), "\n",
+        "Owner: ", addressToString(c.owner), "\n"
+    ));
+  }
+
+  /**
+    @dev Concat an array of strings into a string
+    @param words The array of strings to concat
+  */
+  function concat(string[] memory words) public pure returns (string memory) {
+      bytes memory output;
+      for (uint256 i = 0; i < words.length; i++) {
+          output = abi.encodePacked(output, words[i]);
+      }
+      return string(output);
+    }
+
+  /**
     @dev View all credentials
     @return _credentials An array of all credentials that have been created as a string
    */
-  function viewAllCredentials()
-    public
-    view
-    returns (string memory _credentials)
-  {}
-
+  function viewAllCredentials() public view returns (string memory _credentials) {
+    string[] memory creds = new string[](numCredentials);
+    for (uint256 i = 1; i < numCredentials; i++) {
+      creds[i] = encodeCredentialToString(i);
+    }
+    _credentials = concat(creds);
+  }
   /**
     @dev View credential by credId
     @param credId The id of the credential to view
@@ -119,16 +154,27 @@ contract Credential {
    */
   function viewCredentialById(
     uint256 credId
-  ) public view returns (string memory _credential) {}
+  ) public view returns (string memory _credential) {
+    require(credId < numCredentials, "Invalid credential ID");
+    _credential = encodeCredentialToString(credId);
+  }
 
   /**
     @dev View all credentials of student
     @param studentName The student name to view all the credentials of
-    @return _credential All the credentials of the student to be viewed as a string
+    @return _credentials All the credentials of the student to be viewed as a string
   */
   function viewAllCredentialsOfStudent(
     string memory studentName
-  ) public view returns (string memory _credentials) {}
+  ) public view returns (string memory _credentials) {
+    string[] memory creds = new string[](numCredentials);
+    for (uint256 i = 1; i < numCredentials; i++) {
+      if (keccak256(bytes(credentials[i].studentName)) == keccak256(bytes(studentName))) {
+        creds[i] = encodeCredentialToString(i);
+      }
+    }
+    _credentials = concat(creds);
+  }
 
   //Getters
   function getCredentialStudentName(
@@ -204,7 +250,7 @@ contract Credential {
   }
 
   //helper method to convert uint256 into string
-  function uint2str(uint _i) private pure returns (string memory) {
+  function uintToString(uint _i) private pure returns (string memory) {
     if (_i == 0) {
         return "0";
     }
@@ -216,6 +262,29 @@ contract Credential {
     }
     bytes memory bstr = new bytes(length);
     uint k = length;
+    while (_i != 0) {
+        k = k-1 ;
+        uint8 temp = uint8(48 + _i % 10);
+        bytes1 b1 = bytes1(temp);
+        bstr[k] = b1;
+        _i /= 10;
+    }
+    return string(bstr);
+  }
+
+//helper method to convert uint256 into string
+  function uint256ToString(uint256 _i) private pure returns (string memory) {
+    if (_i == 0) {
+        return "0";
+    }
+    uint256 j = _i;
+    uint256 length;
+    while (j != 0) {
+        length++;
+        j /= 10;
+    }
+    bytes memory bstr = new bytes(length);
+    uint256 k = length;
     while (_i != 0) {
         k = k-1 ;
         uint8 temp = uint8(48 + _i % 10);
@@ -246,7 +315,9 @@ contract Credential {
         return "ACTIVE";
     } else if (_state == credentialState.REVOKED) {
         return "REVOKED";
-    } 
+    } else if (_state == credentialState.EXPIRED) {
+        return "EXPIRED";
+    }
   }
 
 }
