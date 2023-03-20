@@ -53,7 +53,7 @@ contract Credential {
 
   Institution institutionContract;
 
-  constructor(Institution insitutionAddr) public {
+  constructor(Institution insitutionAddr) {
     institutionContract = insitutionAddr;
   }
 
@@ -103,6 +103,15 @@ contract Credential {
 
   /**
       @dev Create a credential
+      @param studentName Name of student owner of credential
+      @param studentNumber The student number of owner of credential
+      @param courseName The name of the course or major the student studied
+      @param degreeLevel The level of the degree earned by the student (e.g. bachelor's, master's)
+      @param endorserName Name of authorised person who endorsed the credential
+      @param institutionId The id of the institution
+      @param issuanceDate The date the credential was issued
+      @param expiryDate The date the credential expires (optional)
+      @param student The address of the student owner of the credential
       @return credId The id of the credential that was added
      */
   function addCredential(
@@ -111,11 +120,16 @@ contract Credential {
     string memory courseName,
     string memory degreeLevel,
     string memory endorserName,
-    uint256 instId,
+    uint256 institutionId,
     uint issuanceDate,
     uint expiryDate, // optional
     address student
-  ) public payable approvedInstitutionOnly(instId) returns (uint256 credId) {
+  )
+    public
+    payable
+    approvedInstitutionOnly(institutionId)
+    returns (uint256 credId)
+  {
     require(msg.value >= 1E16, "At least 0.01ETH needed to create credential");
 
     require(bytes(studentName).length > 0, "Student name cannot be empty");
@@ -124,7 +138,7 @@ contract Credential {
     require(bytes(degreeLevel).length > 0, "Degree level cannot be empty");
     require(bytes(endorserName).length > 0, "Endorser name cannot be empty");
     require(issuanceDate > 0, "Issuance date cannot be empty");
-    uint daysDiff = (issuanceDate - now) / 60 / 60 / 24;
+    uint daysDiff = (issuanceDate - block.timestamp) / 60 / 60 / 24;
     require(
       daysDiff < 0,
       "Issuance date cannot be a future date. Please enter an issuance date that is today or in the past."
@@ -133,7 +147,7 @@ contract Credential {
 
     // New credential object
     string memory institutionName = institutionContract.getInstitutionName(
-      instId
+      institutionId
     );
     credential memory newCredential = credential(
       studentName,
@@ -152,8 +166,8 @@ contract Credential {
     uint256 newCredentialId = numCredentials++;
     credentials[newCredentialId] = newCredential; // commit to state variable
 
-    // Return excess ETH back to msg.sender
-    msg.sender.transfer(msg.value - 1E16);
+    // Return excess ETH back to institution
+    payable(msg.sender).transfer(msg.value - 1E16);
 
     emit add_credential(
       msg.sender,
@@ -194,7 +208,7 @@ contract Credential {
   }
 
   /**
-    @dev Revoke a credential
+    @dev Revoke an active credential
     @param credId The id of the credential to revoke
    */
   function revokeCredential(uint256 credId) public issuerOnly(credId) {
@@ -242,7 +256,7 @@ contract Credential {
   /**
     @dev View all credentials of student
     @param studentName The student name to view all the credentials of
-    @return _credential All the credentials of the student to be viewed as a string
+    @return _credentials All the credentials of the student to be viewed as a string
   */
   function viewAllCredentialsOfStudent(
     string memory studentName
