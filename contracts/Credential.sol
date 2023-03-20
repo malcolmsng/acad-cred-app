@@ -16,12 +16,21 @@ contract Credential {
     string courseName;
     string degreeLevel;
     string endorserName;
+    string issuerName; //name of Institution
     uint issuanceDate;
     uint expiryDate;
     credentialState state;
     address issuer; //address of Institution
-    address owner;
+    address owner; //student (recipient of credential)
   }
+
+  event add_credential(
+    address issuer,
+    string issuerName,
+    address owner,
+    string studentName,
+    string courseName
+  );
 
   uint256 public numCredentials = 0;
   mapping(uint256 => credential) public credentials;
@@ -80,11 +89,65 @@ contract Credential {
       @dev Create a credential
       @return credId The id of the credential that was added
      */
-  function addCredential()
-    public
-    approvedInstitutionOnly(credId)
-    returns (uint256 credId)
-  {}
+  function addCredential(
+    string memory studentName,
+    string memory studentNumber,
+    string memory courseName,
+    string memory degreeLevel,
+    string memory endorserName,
+    uint256 instId,
+    uint issuanceDate,
+    uint expiryDate, // optional
+    address student
+  ) public payable approvedInstitutionOnly(instId) returns (uint256 credId) {
+    require(msg.value >= 1E16, "At least 0.01ETH needed to create credential");
+
+    require(bytes(studentName).length > 0, "Student name cannot be empty");
+    require(bytes(studentNumber).length > 0, "Student number cannot be empty");
+    require(bytes(courseName).length > 0, "Course name cannot be empty");
+    require(bytes(degreeLevel).length > 0, "Degree level cannot be empty");
+    require(bytes(endorserName).length > 0, "Endorser name cannot be empty");
+    require(issuanceDate > 0, "Issuance date cannot be empty");
+    uint daysDiff = (issuanceDate - now) / 60 / 60 / 24;
+    require(
+      daysDiff < 0,
+      "Issuance date cannot be a future date. Please enter an issuance date that is today or in the past."
+    );
+    require(student != address(0), "Student address cannot be empty");
+
+    // New credential object
+    string memory institutionName = institutionContract.getInstitutionName(
+      instId
+    );
+    credential memory newCredential = credential(
+      studentName,
+      studentNumber,
+      courseName,
+      degreeLevel,
+      endorserName,
+      institutionName,
+      issuanceDate,
+      expiryDate,
+      credentialState.ACTIVE,
+      msg.sender, // Issuer (institution)
+      student
+    );
+
+    uint256 newCredentialId = numCredentials++;
+    credentials[newCredentialId] = newCredential; // commit to state variable
+
+    // Return excess ETH back to msg.sender
+    msg.sender.transfer(msg.value - 1E16);
+
+    emit add_credential(
+      msg.sender,
+      institutionName,
+      student,
+      studentName,
+      courseName
+    );
+    return newCredentialId; // return new credentialId
+  }
 
   /**
     @dev Delete a credential
