@@ -4,6 +4,7 @@ const BigNumber = require('bignumber.js'); // npm install bignumber.js
 var assert = require('assert');
 
 const oneEth = new BigNumber(1000000000000000000); // 1 eth
+const zeroAddress = "0x0000000000000000000000000000000000000000";
 
 const toUnixTime = (year, month, day) => {
   const date = new Date(Date.UTC(year, month - 1, day));
@@ -62,12 +63,163 @@ contract('Credential', function (accounts) {
   });
 
   it('Incorrect Add Credential', async () => {
+    // Cannot add credential with less than 0.01 ETH
+    await truffleAssert.reverts(
+      credentialInstance.addCredential(
+        'Lyn Tan',
+        'A0123456L',
+        'Information Systems',
+        'Bachelor of Computing',
+        'Dr Li Xiaofan',
+        0, // Institution ID
+        toUnixTime(2023, 3, 21), // Issuance date
+        toUnixTime(2028, 3, 21), // Expiry date
+        accounts[7], // Student A,
+        { from: accounts[1], value: oneEth.dividedBy(1000) },
+      ),
+      'At least 0.01ETH needed to create credential',
+    );
+
     // Create pending (not approved) institution
     let makeI2 = await institutionInstance.addInstitution(accounts[2], 'Nanyang Technological University');
 
-    // test fail
-    // 1. never pay enough
-    // 2. unapproved institution
-    // 3. fields empty (one by one test)
+    // Unapproved institutions cannot add credential
+    await truffleAssert.reverts(
+      credentialInstance.addCredential(
+        'Lyn Tan',
+        'A0123456L',
+        'Information Systems',
+        'Bachelor of Computing',
+        'Dr Li Xiaofan',
+        1, // Institution ID
+        toUnixTime(2023, 3, 21), // Issuance date
+        toUnixTime(2028, 3, 21), // Expiry date
+        accounts[7], // Student A,
+        { from: accounts[2], value: oneEth.dividedBy(100) },
+      ),
+      'The institution must be approved to perform this function',
+    );
+
+    // Compulsory fields cannot be empty
+    await truffleAssert.reverts(
+      credentialInstance.addCredential(
+        '',
+        'A0123456L',
+        'Information Systems',
+        'Bachelor of Computing',
+        'Dr Li Xiaofan',
+        0, // Institution ID
+        toUnixTime(2023, 3, 21), // Issuance date
+        0, // Expiry date
+        accounts[7], // Student A,
+        { from: accounts[1], value: oneEth.dividedBy(100) },
+      ),
+      'Student name cannot be empty',
+    );
+    await truffleAssert.reverts(
+      credentialInstance.addCredential(
+        'Lyn Tan',
+        '',
+        'Information Systems',
+        'Bachelor of Computing',
+        'Dr Li Xiaofan',
+        0, // Institution ID
+        toUnixTime(2023, 3, 21), // Issuance date
+        0, // Expiry date
+        accounts[7], // Student A,
+        { from: accounts[1], value: oneEth.dividedBy(100) },
+      ),
+      'Student number cannot be empty',
+    );
+    await truffleAssert.reverts(
+      credentialInstance.addCredential(
+        'Lyn Tan',
+        'A0123456L',
+        '',
+        'Bachelor of Computing',
+        'Dr Li Xiaofan',
+        0, // Institution ID
+        toUnixTime(2023, 3, 21), // Issuance date
+        0, // Expiry date
+        accounts[7], // Student A,
+        { from: accounts[1], value: oneEth.dividedBy(100) },
+      ),
+      'Course name cannot be empty',
+    );
+    await truffleAssert.reverts(
+      credentialInstance.addCredential(
+        'Lyn Tan',
+        'A0123456L',
+        'Information Systems',
+        '',
+        'Dr Li Xiaofan',
+        0, // Institution ID
+        toUnixTime(2023, 3, 21), // Issuance date
+        0, // Expiry date
+        accounts[7], // Student A,
+        { from: accounts[1], value: oneEth.dividedBy(100) },
+      ),
+      'Degree level cannot be empty',
+    );
+    await truffleAssert.reverts(
+      credentialInstance.addCredential(
+        'Lyn Tan',
+        'A0123456L',
+        'Information Systems',
+        'Bachelor of Computing',
+        '',
+        0, // Institution ID
+        toUnixTime(2023, 3, 21), // Issuance date
+        0, // Expiry date
+        accounts[7], // Student A,
+        { from: accounts[1], value: oneEth.dividedBy(100) },
+      ),
+      'Endorser name cannot be empty',
+    );
+    await truffleAssert.reverts(
+      credentialInstance.addCredential(
+        'Lyn Tan',
+        'A0123456L',
+        'Information Systems',
+        'Bachelor of Computing',
+        'Dr Li Xiaofan',
+        0, // Institution ID
+        0, // Issuance date
+        0, // Expiry date
+        accounts[7], // Student A,
+        { from: accounts[1], value: oneEth.dividedBy(100) },
+      ),
+      'Issuance date cannot be empty',
+    );
+    await truffleAssert.reverts(
+      credentialInstance.addCredential(
+        'Lyn Tan',
+        'A0123456L',
+        'Information Systems',
+        'Bachelor of Computing',
+        'Dr Li Xiaofan',
+        0, // Institution ID
+        toUnixTime(2023, 8, 1), // Issuance date
+        0, // Expiry date
+        accounts[7], // Student A,
+        { from: accounts[1], value: oneEth.dividedBy(100) },
+      ),
+      'Issuance date cannot be a future date. Please enter an issuance date that is today or in the past.',
+    );
+    await truffleAssert.reverts(
+      credentialInstance.addCredential(
+        'Lyn Tan',
+        'A0123456L',
+        'Information Systems',
+        'Bachelor of Computing',
+        'Dr Li Xiaofan',
+        0, // Institution ID
+        toUnixTime(2023, 3, 21), // Issuance date
+        0, // Expiry date
+        zeroAddress, // Student A,
+        { from: accounts[1], value: oneEth.dividedBy(100) },
+      ),
+      'Student address cannot be empty',
+    );
   });
 });
