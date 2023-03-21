@@ -27,6 +27,7 @@ contract Credential {
   }
 
   event add_credential(
+    uint256 credId,
     address issuer,
     string issuerName,
     address owner,
@@ -110,7 +111,7 @@ contract Credential {
       @param endorserName Name of authorised person who endorsed the credential
       @param institutionId The id of the institution
       @param issuanceDate The date the credential was issued
-      @param expiryDate The date the credential expires (optional)
+      @param expiryDate The date the credential expires (optional, 0 if null)
       @param student The address of the student owner of the credential
       @return credId The id of the credential that was added
      */
@@ -122,7 +123,7 @@ contract Credential {
     string memory endorserName,
     uint256 institutionId,
     uint issuanceDate,
-    uint expiryDate, // optional
+    uint expiryDate, // optional, 0 if null
     address student
   )
     public
@@ -138,9 +139,8 @@ contract Credential {
     require(bytes(degreeLevel).length > 0, "Degree level cannot be empty");
     require(bytes(endorserName).length > 0, "Endorser name cannot be empty");
     require(issuanceDate > 0, "Issuance date cannot be empty");
-    uint daysDiff = (issuanceDate - block.timestamp) / 60 / 60 / 24;
     require(
-      daysDiff < 0,
+      issuanceDate <= block.timestamp,
       "Issuance date cannot be a future date. Please enter an issuance date that is today or in the past."
     );
     require(student != address(0), "Student address cannot be empty");
@@ -165,8 +165,12 @@ contract Credential {
 
     // Return excess ETH back to institution
     payable(msg.sender).transfer(msg.value - 1E16);
+    // bool sent = payable(msg.sender).send(msg.value - 1E16);
+    // (bool sent, ) = msg.sender.call{value: msg.value - 1E16}("");
+    // require(sent, "Failed to send Ether");
 
     emit add_credential(
+      newCredentialId,
       msg.sender,
       newCredential.issuerName,
       newCredential.owner,
@@ -181,26 +185,24 @@ contract Credential {
     @param credId The id of the credential to delete
    */
   function deleteCredential(uint256 credId) public issuerOnly(credId) {
-    credential memory cred = credentials[credId];
     require(
-      cred.state != credentialState.DELETED,
+      credentials[credId].state != credentialState.DELETED,
       "Credential has already been deleted."
     );
     require(
-      cred.state == credentialState.ACTIVE,
+      credentials[credId].state == credentialState.ACTIVE,
       "Only active credentials can be deleted."
     );
 
     // Lazy deletion, numCredentials does not change
-    cred.state = credentialState.DELETED;
-    credentials[credId] = cred;
+    credentials[credId].state = credentialState.DELETED;
 
     emit delete_credential(
       msg.sender,
-      cred.issuerName,
-      cred.owner,
-      cred.studentName,
-      cred.courseName
+      credentials[credId].issuerName,
+      credentials[credId].owner,
+      credentials[credId].studentName,
+      credentials[credId].courseName
     );
   }
 
@@ -209,25 +211,23 @@ contract Credential {
     @param credId The id of the credential to revoke
    */
   function revokeCredential(uint256 credId) public issuerOnly(credId) {
-    credential memory cred = credentials[credId];
     require(
-      cred.state != credentialState.REVOKED,
+      credentials[credId].state != credentialState.REVOKED,
       "Credential has already been revoked."
     );
     require(
-      cred.state == credentialState.ACTIVE,
+      credentials[credId].state == credentialState.ACTIVE,
       "Only active credentials can be revoked"
     );
 
-    cred.state = credentialState.REVOKED;
-    credentials[credId] = cred;
+    credentials[credId].state = credentialState.REVOKED;
 
     emit revoke_credential(
       msg.sender,
-      cred.issuerName,
-      cred.owner,
-      cred.studentName,
-      cred.courseName
+      credentials[credId].issuerName,
+      credentials[credId].owner,
+      credentials[credId].studentName,
+      credentials[credId].courseName
     );
   }
 
