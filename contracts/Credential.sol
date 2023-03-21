@@ -178,7 +178,9 @@ contract Credential {
     @dev Delete an active credential to edit and reupload a credential
     @param credId The id of the credential to delete
    */
-  function deleteCredential(uint256 credId) public issuerOnly(credId) {
+  function deleteCredential(
+    uint256 credId
+  ) public issuerOnly(credId) validCredentialId(credId) {
     require(
       credentials[credId].state != credentialState.DELETED,
       "Credential has already been deleted."
@@ -204,7 +206,9 @@ contract Credential {
     @dev Revoke an active credential
     @param credId The id of the credential to revoke
    */
-  function revokeCredential(uint256 credId) public issuerOnly(credId) {
+  function revokeCredential(
+    uint256 credId
+  ) public issuerOnly(credId) validCredentialId(credId) {
     require(
       credentials[credId].state != credentialState.REVOKED,
       "Credential has already been revoked."

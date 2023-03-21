@@ -4,7 +4,7 @@ const BigNumber = require('bignumber.js'); // npm install bignumber.js
 var assert = require('assert');
 
 const oneEth = new BigNumber(1000000000000000000); // 1 eth
-const zeroAddress = "0x0000000000000000000000000000000000000000";
+const zeroAddress = '0x0000000000000000000000000000000000000000';
 
 const toUnixTime = (year, month, day) => {
   const date = new Date(Date.UTC(year, month - 1, day));
@@ -56,7 +56,7 @@ contract('Credential', function (accounts) {
       toUnixTime(2023, 3, 21), // Issuance date
       0, // Expiry date
       accounts[8], // Student B,
-      { from: accounts[1], value: oneEth.dividedBy(100).multipliedBy(2) },
+      { from: accounts[1], value: oneEth.dividedBy(100) },
     );
     await assert.notStrictEqual(makeC2, undefined, 'Failed to add credential');
     truffleAssert.eventEmitted(makeC2, 'add_credential');
@@ -221,5 +221,25 @@ contract('Credential', function (accounts) {
       ),
       'Student address cannot be empty',
     );
+  });
+
+  it('Delete Credential', async () => {
+    let deleteC1 = await credentialInstance.deleteCredential(0, { from: accounts[1] });
+    truffleAssert.eventEmitted(deleteC1, 'delete_credential');
+
+    await truffleAssert.reverts(credentialInstance.deleteCredential(0, { from: accounts[1] }), 'Credential has already been deleted.');
+  });
+
+  it('Revoke Credential', async () => {
+    let revokeC2 = await credentialInstance.revokeCredential(1, { from: accounts[1] });
+    truffleAssert.eventEmitted(revokeC2, 'revoke_credential');
+
+    await truffleAssert.reverts(credentialInstance.revokeCredential(1, { from: accounts[1] }), 'Credential has already been revoked.');
+
+    await truffleAssert.reverts(credentialInstance.revokeCredential(0, { from: accounts[1] }), 'Only active credentials can be revoked');
+  });
+
+  it('Incorrect Delete Credential', async () => {
+    await truffleAssert.reverts(credentialInstance.deleteCredential(1, { from: accounts[1] }), 'Only active credentials can be deleted');
   });
 });
