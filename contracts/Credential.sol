@@ -163,12 +163,6 @@ contract Credential {
     uint256 newCredentialId = numCredentials++;
     credentials[newCredentialId] = newCredential; // commit to state variable
 
-    // Return excess ETH back to institution
-    payable(msg.sender).transfer(msg.value - 1E16);
-    // bool sent = payable(msg.sender).send(msg.value - 1E16);
-    // (bool sent, ) = msg.sender.call{value: msg.value - 1E16}("");
-    // require(sent, "Failed to send Ether");
-
     emit add_credential(
       newCredentialId,
       msg.sender,

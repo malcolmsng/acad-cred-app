@@ -45,7 +45,6 @@ contract('Credential', function (accounts) {
     truffleAssert.eventEmitted(makeC1, 'add_credential');
 
     // Create a credential without an expiry date
-    let intialAccountBal = new BigNumber(await web3.eth.getBalance(accounts[1]));
     let makeC2 = await credentialInstance.addCredential(
       'Keith Chan',
       'A0654321K',
@@ -60,11 +59,6 @@ contract('Credential', function (accounts) {
     );
     await assert.notStrictEqual(makeC2, undefined, 'Failed to add credential');
     truffleAssert.eventEmitted(makeC2, 'add_credential');
-
-    // Check that extra ETH was returned to issuer (only 0.01 ETH deducted)
-    let newAccountBal = new BigNumber(await web3.eth.getBalance(accounts[1]));
-    let accountBalDecr = intialAccountBal.minus(newAccountBal);
-    await assert(accountBalDecr.isEqualTo(oneEth.dividedBy(100)), 'Institution was not charged the correct amount of ETH');
   });
 
   it('Incorrect Add Credential', async () => {
