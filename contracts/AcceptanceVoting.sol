@@ -1,13 +1,17 @@
 pragma solidity ^0.5.0;
 
 contract AcceptanceVoting {
-  //List of committee members
+  //List of committee members, chairman is part of committee members
   address[] committeeMembers;
   // member address => true if exist
   mapping(address => bool) isCommitteeMember;
   // members => true if voted
   mapping(address => bool) hasVoted;
-  // application fee
+
+  // applicant => votes it got
+  mapping(uint256 => uint256) candidateVoteScore;
+
+  // application fee in wei
   uint256 applicationFee;
   //Size of commitee
   uint32 committeeSize;
@@ -26,8 +30,15 @@ contract AcceptanceVoting {
   event new_chairman(address newChairman);
   event new_committee_member(address newCommitteeMember);
   event new_committee_size(uint256 size);
-  event voteOpen(uint256 blockNumber);
-  event voteClose(uint256 blockNumber);
+  event voted(address committeeMember, uint256 voteScore);
+  event vote_open(uint256 blockNumber);
+  event vote_close(uint256 blockNumber);
+  event vote_results(
+    string outcome,
+    uint256 candidateNumber,
+    uint256 candidateScore,
+    uint256 scoreNeeded
+  );
 
   enum VotingState {
     OPEN,
@@ -41,6 +52,7 @@ contract AcceptanceVoting {
     committeeChairman = msg.sender;
     applicationFee = fee;
     votingDeadline = deadline;
+    addCommitteeMember(msg.sender);
   }
 
   modifier isChairman() {
@@ -51,7 +63,40 @@ contract AcceptanceVoting {
     _;
   }
 
-  function vote() external {}
+  function vote(
+    uint256 candidateNumber,
+    bool criteria_1,
+    bool criteria_2,
+    bool criteria_3,
+    bool criteria_4,
+    bool criteria_5
+  ) external {
+    require(isCommitteeMember[msg.sender], "You are not a committee member");
+    hasVoted[msg.sender] = true;
+
+    // Do voting calculation
+    uint256 vote_score = 0;
+    if (criteria_1) {
+      vote_score++;
+    }
+    if (criteria_2) {
+      vote_score++;
+    }
+    if (criteria_3) {
+      vote_score++;
+    }
+    if (criteria_4) {
+      vote_score++;
+    }
+    if (criteria_5) {
+      vote_score++;
+    }
+
+    // Add committee member vote score to total vote score
+    candidateVoteScore[candidateNumber] += vote_score;
+
+    emit voted(msg.sender, vote_score);
+  }
 
   function openVote() external isChairman {
     // Reset voting
@@ -66,19 +111,43 @@ contract AcceptanceVoting {
     voteOpenBlock = block.number;
 
     // Emit event
-    emit voteOpen(block.number);
+    emit vote_open(block.number);
   }
 
-  function closeVote() external isChairman {
+  function closeVote(
+    uint256 candidateNumber,
+    uint256 scoreNeeded
+  ) external isChairman {
     require(currentState == VotingState.OPEN, "Vote is not open");
     require(voteOpenBlock + votingDeadline >= block.number, "Deadline not up");
 
     // Calculate votes here
-
-    emit voteClose(block.number);
+    if (candidateVoteScore[candidateNumber] >= scoreNeeded) {
+      emit vote_results(
+        "Accepted",
+        candidateNumber,
+        candidateVoteScore[candidateNumber],
+        scoreNeeded
+      );
+    } else if (candidateVoteScore[candidateNumber] < scoreNeeded) {
+      emit vote_results(
+        "Not accepted",
+        candidateNumber,
+        candidateVoteScore[candidateNumber],
+        scoreNeeded
+      );
+    }
+    emit vote_close(block.number);
   }
 
-  function distributeFee() external payable {}
+  function distributeFee() external payable {
+    // Divide the application fee equally among all committee members
+    uint256 val = applicationFee / committeeMembers.length;
+    for (uint256 i = 0; i < committeeMembers.length; i++) {
+      address payable recipient = address(uint160(committeeMembers[i]));
+      recipient.transfer(val);
+    }
+  }
 
   // getters
   function getCommitteeChairman() external view returns (address) {
