@@ -26,8 +26,8 @@ contract('Credential', function (accounts) {
 
   it('Add Credential', async () => {
     // Create approved institution
-    let makeI1 = await institutionInstance.addInstitution(accounts[1], 'National University of Singapore');
-    let approveI1 = await institutionInstance.approveInstitution(0);
+    const makeI1 = await institutionInstance.addInstitution(accounts[1], 'National University of Singapore');
+    const approveI1 = await institutionInstance.approveInstitution(0);
 
     // Create a credential with an expiry date
     let makeC1 = await credentialInstance.addCredential(
@@ -81,7 +81,7 @@ contract('Credential', function (accounts) {
     );
 
     // Create pending (not approved) institution
-    let makeI2 = await institutionInstance.addInstitution(accounts[2], 'Nanyang Technological University');
+    const makeI2 = await institutionInstance.addInstitution(accounts[2], 'Nanyang Technological University');
 
     // Unapproved institutions cannot add credential
     await truffleAssert.reverts(
