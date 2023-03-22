@@ -54,7 +54,7 @@ contract Credential {
 
   Institution institutionContract;
 
-  constructor(Institution insitutionAddr) {
+  constructor(Institution insitutionAddr) public {
     institutionContract = insitutionAddr;
   }
 
