@@ -1,9 +1,8 @@
 pragma solidity ^0.5.0;
 
 contract AcceptanceVoting {
-
   //List of committee members
-  address[] committeeMembers; 
+  address[] committeeMembers;
   // member address => true if exist
   mapping(address => bool) isCommitteeMember;
   // members => true if voted
@@ -45,14 +44,16 @@ contract AcceptanceVoting {
   }
 
   modifier isChairman() {
-    require(msg.sender == committeeChairman, "Only Chairman can call this function");
+    require(
+      msg.sender == committeeChairman,
+      "Only Chairman can call this function"
+    );
     _;
   }
 
   function vote() external {}
 
   function openVote() external isChairman {
-
     // Reset voting
     for (uint256 i = 0; i < committeeMembers.length; i++) {
       hasVoted[committeeMembers[i]] = false;
@@ -73,7 +74,7 @@ contract AcceptanceVoting {
     require(voteOpenBlock + votingDeadline >= block.number, "Deadline not up");
 
     // Calculate votes here
-    
+
     emit voteClose(block.number);
   }
 
@@ -127,16 +128,19 @@ contract AcceptanceVoting {
     // Remove address from committee member array without preserving order
     for (uint256 i = 0; i < committeeMembers.length; i++) {
       if (user == committeeMembers[i]) {
-          // Replace current index with last element
-          committeeMembers[i] = committeeMembers[committeeMembers.length-1];
-          // Pop last element
-          committeeMembers.pop();
+        // Replace current index with last element
+        committeeMembers[i] = committeeMembers[committeeMembers.length - 1];
+        // Pop last element
+        committeeMembers.pop();
       }
     }
   }
 
   function addCommitteeMember(address user) public isChairman {
-    require(committeeMembers.length < committeeSize, "Max committee Members size");
+    require(
+      committeeMembers.length < committeeSize,
+      "Max committee Members size"
+    );
     committeeMembers.push(user);
     isCommitteeMember[user] = true;
     emit new_committee_member(user);
@@ -146,5 +150,4 @@ contract AcceptanceVoting {
     committeeChairman = user;
     emit new_chairman(user);
   }
-
 }
