@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: UNLICENSE
-pragma solidity ^0.5.0;
+pragma solidity ^0.8.17;
 pragma experimental ABIEncoderV2;
 
 import "./Institution.sol";
@@ -23,7 +23,6 @@ contract Credential {
     uint expiryDate;
     credentialState state;
     address issuer; //address of Institution
-    address owner; //student (recipient of credential)
   }
 
   event add_credential(
@@ -56,18 +55,6 @@ contract Credential {
 
   constructor(Institution insitutionContractAddr) public {
     institutionContract = insitutionContractAddr;
-  }
-
-  /**
-    @dev Require credential owner only
-    @param credId The id of the credential to check
-   */
-  modifier ownerOnly(uint256 credId) {
-    require(
-      credentials[credId].owner == msg.sender,
-      "Only the owner of the credential can call this function"
-    );
-    _;
   }
 
   /**

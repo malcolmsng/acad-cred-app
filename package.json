@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "prettier": "prettier --write 'contracts/**/*.sol'",
+    "prettier": "prettier --write '**/*{.js,.sol}'",
     "lint": "prettier --list-different 'contracts/**/*.sol'"
   },
   "devDependencies": {
