@@ -13,21 +13,124 @@ const toUnixTime = (year, month, day) => {
 
 const toDate = unixTimestamp => new Date(unixTimestamp * 1000);
 
+var AcceptanceVoting = artifacts.require('../contracts/AcceptanceVoting.sol');
 var Credential = artifacts.require('../contracts/Credential.sol');
 var Institution = artifacts.require('../contracts/Institution.sol');
 
-contract('Credential', function (accounts) {
+contract('Unit Test', function (accounts) {
   before(async () => {
+    acceptanceVotingInstance = await AcceptanceVoting.deployed();
     credentialInstance = await Credential.deployed();
     institutionInstance = await Institution.deployed();
   });
+
+
+  console.log('Testing Institution contract');
+
+  it('Add Institution', async () => {
+    // Create approved institution
+    let makeI1 = await institutionInstance.addInstitution(
+      'National University of Singapore',
+      "Singapore",
+      "Singapore",
+      "1.290270",
+      "103.851959",
+      {from: accounts[1]}
+      );
+    await assert.notStrictEqual(makeI1, undefined, 'Failed to add institution');
+    truffleAssert.eventEmitted(makeI1, 'add_institution');
+  });
+
+  it('Incorrect Add Institution', async () => {
+    // Institution name cannot be empty
+    await truffleAssert.reverts(
+      institutionInstance.addInstitution(
+        '', // Empty institution name
+        "Singapore",
+        "Singapore",
+        "1.290270",
+        "103.851959",
+        {from: accounts[1]}
+        ),
+      'Institution name cannot be empty',
+    );
+
+    // Institution country cannot be empty
+    await truffleAssert.reverts(
+      institutionInstance.addInstitution(
+        'National University of Singapore', 
+        "", // Empty institution name
+        "Singapore",
+        "1.290270",
+        "103.851959",
+        {from: accounts[1]}
+        ),
+      'Institution country cannot be empty',
+    );
+
+    // Institution city cannot be empty
+    await truffleAssert.reverts(
+      institutionInstance.addInstitution(
+        'National University of Singapore', 
+        "Singapore",
+        "", // Empty institution city
+        "1.290270",
+        "103.851959",
+        {from: accounts[1]}
+        ),
+      'Institution city cannot be empty',
+    );
+
+    // Institution latitude cannot be empty
+    await truffleAssert.reverts(
+      institutionInstance.addInstitution(
+        'National University of Singapore', 
+        "Singapore",
+        "Singapore",
+        "", // Empty institution latitude
+        "103.851959",
+        {from: accounts[1]}
+        ),
+      'Institution latitude cannot be empty',
+    );
+
+    // Institution longitude cannot be empty
+    await truffleAssert.reverts(
+      institutionInstance.addInstitution(
+        'National University of Singapore',
+        "Singapore",
+        "Singapore",
+        "1.290270",
+        "", // Empty institution longitude
+        {from: accounts[1]}
+        ),
+      'Institution longitude cannot be empty',
+    );
+  });
+
+  it('Delete Institution', async () => {
+    let deleteI1 = await institutionInstance.deleteInstitution(0, { from: accounts[1] });
+    truffleAssert.eventEmitted(deleteI1, 'delete_institution');
+
+    await truffleAssert.reverts(institutionInstance.deleteInstitution(0, { from: accounts[1] }), 'Institution has already been deleted from the system.');
+  });
+
+
+  //////////
 
   console.log('Testing Credential contract');
 
   it('Add Credential', async () => {
     // Create approved institution
-    let makeI1 = await institutionInstance.addInstitution(accounts[1], 'National University of Singapore');
-    let approveI1 = await institutionInstance.approveInstitution(0);
+    let makeI2 = await institutionInstance.addInstitution(
+      'Nanyang Technological University',
+      "Singapore",
+      "Singapore",
+      "1.3483",
+      "103.6831",
+      {from: accounts[1]}
+    );
+    let approveI1 = await institutionInstance.approveInstitution(1);
 
     // Create a credential with an expiry date
     let makeC1 = await credentialInstance.addCredential(
@@ -36,7 +139,7 @@ contract('Credential', function (accounts) {
       'Information Systems',
       'Bachelor of Computing',
       'Dr Li Xiaofan',
-      0, // Institution ID
+      1, // Institution ID
       toUnixTime(2023, 3, 21), // Issuance date
       toUnixTime(2028, 3, 21), // Expiry date
       accounts[7], // Student A,
@@ -52,7 +155,7 @@ contract('Credential', function (accounts) {
       'Artificial Intelligence Specialisation',
       'Master of Computing',
       'Professor Tan Kian Lee',
-      0, // Institution ID
+      1, // Institution ID
       toUnixTime(2023, 3, 21), // Issuance date
       0, // Expiry date
       accounts[8], // Student B,
@@ -71,7 +174,7 @@ contract('Credential', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        0, // Institution ID
+        1, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         toUnixTime(2028, 3, 21), // Expiry date
         accounts[7], // Student A,
@@ -81,7 +184,14 @@ contract('Credential', function (accounts) {
     );
 
     // Create pending (not approved) institution
-    let makeI2 = await institutionInstance.addInstitution(accounts[2], 'Nanyang Technological University');
+    let makeI3 = await institutionInstance.addInstitution(
+      'Singapore Management University',
+      "Singapore",
+      "Singapore",
+      "1.2963",
+      "103.8502",
+      {from: accounts[2]}
+      );
 
     // Unapproved institutions cannot add credential
     await truffleAssert.reverts(
@@ -91,7 +201,7 @@ contract('Credential', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        1, // Institution ID
+        2, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         toUnixTime(2028, 3, 21), // Expiry date
         accounts[7], // Student A,
@@ -108,7 +218,7 @@ contract('Credential', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        0, // Institution ID
+        1, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -123,7 +233,7 @@ contract('Credential', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        0, // Institution ID
+        1, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -138,7 +248,7 @@ contract('Credential', function (accounts) {
         '',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        0, // Institution ID
+        1, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -153,7 +263,7 @@ contract('Credential', function (accounts) {
         'Information Systems',
         '',
         'Dr Li Xiaofan',
-        0, // Institution ID
+        1, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -168,7 +278,7 @@ contract('Credential', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         '',
-        0, // Institution ID
+        1, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -183,7 +293,7 @@ contract('Credential', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        0, // Institution ID
+        1, // Institution ID
         0, // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -198,7 +308,7 @@ contract('Credential', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        0, // Institution ID
+        1, // Institution ID
         toUnixTime(2023, 8, 1), // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -213,7 +323,7 @@ contract('Credential', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        0, // Institution ID
+        1, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
         zeroAddress, // Student A,
