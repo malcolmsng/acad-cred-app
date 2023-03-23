@@ -2,13 +2,13 @@
 pragma solidity >=0.5.0;
 pragma experimental ABIEncoderV2;
 
-// import "./AcceptanceVoting.sol"
+import "./AcceptanceVoting.sol";
 
 contract Institution {
   enum institutionState {
-    APPROVED,
-    PENDING, //pending vote
-    REJECTED
+    APPROVED, //approved after vote
+    PENDING, //pending voting
+    REJECTED //rejected after vote
   }
 
   struct institution {
@@ -33,12 +33,12 @@ contract Institution {
   mapping(uint256 => institution) public institutions;
   address _owner;
 
-  // AcceptanceVoting acceptanceVotingContract;
+  AcceptanceVoting acceptanceVotingContract;
 
-  // constructor(AcceptanceVoting acceptanceVotingAddr) public {
-  //   _owner = msg.sender;
-  //   // acceptanceVotingContract = acceptanceVotingAddr;
-  // }
+  constructor(AcceptanceVoting acceptanceVotingAddr) public {
+    _owner = msg.sender;
+    acceptanceVotingContract = acceptanceVotingAddr;
+  }
 
   /**
     @dev Require contract owner only
@@ -86,6 +86,12 @@ contract Institution {
     uint256 newInstitutionId = numInstitutions++;
     institutions[newInstitutionId] = newInst; // commit to state variable
 
+    acceptanceVotingContract.addApplicant(
+      newInstitutionId,
+      msg.sender,
+      institutionName
+    );
+
     emit add_institution(
       institutions[newInstitutionId].owner,
       institutions[newInstitutionId].name,
@@ -108,12 +114,22 @@ contract Institution {
    */
   function approveInstitution(uint256 instId) public votedOnly {
     // Dummy code just to enable testing of credential functions
-    institutions[instId].state = institutionState.APPROVED;
-    emit approve_institution(
-      institutions[instId].owner,
-      institutions[instId].name,
-      institutions[instId].state
-    );
+    bool approvalResult = acceptanceVotingContract.checkApproved(instId);
+    bool votingConcluded = acceptanceVotingContract.checkConcluded(instId);
+
+    if (approvalResult == true) {
+      institutions[instId].state = institutionState.APPROVED;
+
+      emit approve_institution(
+        institutions[instId].owner,
+        institutions[instId].name,
+        institutions[instId].state
+      );
+    } else if ((approvalResult != true) && (votingConcluded == true)) {
+      institutions[instId].state = institutionState.REJECTED;
+    } else {
+      institutions[instId].state = institutionState.PENDING;
+    }
   }
 
   //Getters

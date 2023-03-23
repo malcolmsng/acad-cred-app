@@ -1,66 +1,81 @@
 pragma solidity ^0.5.0;
 
 contract AcceptanceVoting {
-  //List of committee members, chairman is part of committee members
-  address[] committeeMembers;
-  // member address => true if exist
-  mapping(address => bool) isCommitteeMember;
-
-  // members => candidate => true if voted
-  mapping(address => mapping(uint256 => bool)) hasVoted;
-
-  // applicant => votes it got
-  mapping(uint256 => uint256) candidateVoteScore;
-
-  // applicant => voting status
-  mapping(uint256 => VotingState) candidateVotingState;
-
-  // applicant => vote open block number
-  mapping(uint256 => uint256) candidateVoteOpenBlock;
-
-  // application fee in wei
-  uint256 applicationFee;
-  //Size of commitee
-  uint32 committeeSize;
-
-  //Address of committee chariman
-  address committeeChairman;
-  // should we set a deadline to vote e.g. 1 week
-  // Deadline in terms of blocks (1 eth block roughly 12.13 minutes)
-  uint256 votingDeadline;
-
-  VotingState currentState;
-
-  //Events
-  event new_chairman(address newChairman);
-  event new_committee_member(address newCommitteeMember);
-  event new_committee_size(uint256 size);
-  event voted(
-    address committeeMember,
-    uint256 candidateNumber,
-    uint256 voteScore
-  );
-  event vote_open(uint256 candidateNumber, uint256 blockNumber);
-  event vote_close(uint256 candidateNumber, uint256 blockNumber);
-  event vote_results(
-    string outcome,
-    uint256 candidateNumber,
-    uint256 candidateScore,
-    uint256 scoreNeeded
-  );
-
   enum VotingState {
     OPEN,
     CLOSED
   }
 
+  //List of committee members, chairman is part of committee members
+  address[] committeeMembers;
+
+  // member address => true if exist
+  mapping(address => bool) isCommitteeMember;
+
+  // applicantId => applicant address
+  mapping(uint256 => address) applicantAddress;
+
+  // applicantId => applicant name
+  mapping(uint256 => string) applicantName;
+
+  // members => applicant => true if voted
+  mapping(address => mapping(uint256 => bool)) hasVoted;
+
+  // applicant => votes it got
+  mapping(uint256 => uint256) applicantVoteScore;
+
+  // applicant => voting status
+  mapping(uint256 => VotingState) applicantVotingState;
+
+  // applicant => vote open block number
+  mapping(uint256 => uint256) applicantVoteOpenBlock;
+
+  // applicant => vote result status
+  mapping(uint256 => bool) isApproved;
+
+  // applicant => voting ended
+  mapping(uint256 => bool) isConcluded;
+
+  // application fee in wei
+  uint256 applicationFee;
+  //Size of commitee
+  //uint32 committeeSize;
+
+  //Address of committee chariman
+  address committeeChairman;
+  // should we set a deadline to vote e.g. 1 week
+  // Deadline in terms of blocks (1 eth block roughly 12.13 minutes)
+  // applicant => vote deadline for committee to vote for that applicant
+  uint256 votingTimeframe;
+
+  // applicant => voting state for that applicant
+  mapping(uint256 => VotingState) currentState;
+
+  //Events
+  event new_chairman(address newChairman);
+  event new_committee_member(address newCommitteeMember);
+  //event new_committee_size(uint256 size);
+  event voted(
+    address committeeMember,
+    uint256 applicantNumber,
+    uint256 voteScore
+  );
+  event vote_open(uint256 applicantNumber, uint256 blockNumber);
+  event vote_close(uint256 applicantNumber, uint256 blockNumber);
+  event vote_results(
+    string outcome,
+    uint256 applicantNumber,
+    uint256 applicantScore,
+    uint256 scoreNeeded
+  );
+
   // should the person who deploys the contract be the chairman?
   // or should we allocate the chairman
-  constructor(uint256 fee, uint256 deadline) public {
+  constructor(uint256 fee, uint256 voteDuration) public {
     committeeChairman = msg.sender;
     applicationFee = fee;
-    votingDeadline = deadline;
-    addCommitteeMember(msg.sender);
+    votingTimeframe = voteDuration;
+    //addCommitteeMember(msg.sender);
   }
 
   modifier isChairman() {
@@ -71,88 +86,122 @@ contract AcceptanceVoting {
     _;
   }
 
+  function addApplicant(
+    uint256 institutionID,
+    address institutionAddress,
+    string calldata institutionName
+  ) external {
+    applicantAddress[institutionID] = institutionAddress;
+    applicantName[institutionID] = institutionName;
+  }
+
+  function getApplicantName(
+    uint256 applicantNumber
+  ) external view returns (string memory) {
+    return applicantName[applicantNumber];
+  }
+
+  function checkApproved(uint256 applicantNumber) external view returns (bool) {
+    return isApproved[applicantNumber];
+  }
+
+  function checkConcluded(
+    uint256 applicantNumber
+  ) external view returns (bool) {
+    return isConcluded[applicantNumber];
+  }
+
   function vote(
-    uint256 candidateNumber,
-    bool criteria_1,
-    bool criteria_2,
-    bool criteria_3,
-    bool criteria_4,
-    bool criteria_5
+    uint256 applicantNumber,
+    bool hasPhyiscalPremise,
+    bool hasWebPresence,
+    bool hasResearch,
+    bool hasAwards,
+    bool hasStudentMarketing
   ) external {
     require(isCommitteeMember[msg.sender], "You are not a committee member");
     require(
-      candidateVotingState[candidateNumber] == VotingState.OPEN,
-      "Candidate not open for voting"
+      applicantVotingState[applicantNumber] == VotingState.OPEN,
+      "applicant not open for voting"
     );
-    hasVoted[msg.sender][candidateNumber] = true;
+    hasVoted[msg.sender][applicantNumber] = true;
 
     // Do voting calculation
     uint256 vote_score = 0;
-    if (criteria_1) {
+    if (hasPhyiscalPremise) {
       vote_score++;
     }
-    if (criteria_2) {
+    if (hasWebPresence) {
       vote_score++;
     }
-    if (criteria_3) {
+    if (hasResearch) {
       vote_score++;
     }
-    if (criteria_4) {
+    if (hasAwards) {
       vote_score++;
     }
-    if (criteria_5) {
+    if (hasStudentMarketing) {
       vote_score++;
     }
 
     // Add committee member vote score to total vote score
-    candidateVoteScore[candidateNumber] += vote_score;
+    applicantVoteScore[applicantNumber] += vote_score;
 
-    emit voted(msg.sender, candidateNumber, vote_score);
+    emit voted(msg.sender, applicantNumber, vote_score);
   }
 
-  function openVote(uint256 candidateNumber) external isChairman {
+  function openVote(uint256 applicantNumber) external isChairman {
     require(
-      candidateVotingState[candidateNumber] == VotingState.CLOSED,
-      "Candidate already undergoing voting"
+      applicantVotingState[applicantNumber] == VotingState.CLOSED,
+      "applicant already undergoing voting"
     );
 
     // Change voting state
-    candidateVotingState[candidateNumber] = VotingState.OPEN;
+    applicantVotingState[applicantNumber] = VotingState.OPEN;
 
     // Write vote open block
-    candidateVoteOpenBlock[candidateNumber] = block.number;
+    applicantVoteOpenBlock[applicantNumber] = block.number;
 
     // Emit event
-    emit vote_open(candidateNumber, block.number);
+    emit vote_open(applicantNumber, block.number);
   }
 
   function closeVote(
-    uint256 candidateNumber,
+    uint256 applicantNumber,
     uint256 scoreNeeded
   ) external isChairman {
-    require(currentState == VotingState.OPEN, "Vote is not open");
     require(
-      candidateVoteOpenBlock[candidateNumber] + votingDeadline >= block.number,
-      "Deadline not up"
+      currentState[applicantNumber] == VotingState.OPEN,
+      "Vote is not open"
     );
+    //require(
+    //  applicantVoteOpenBlock[applicantNumber] + votingTimeframe >= block.number,
+    //  "Deadline not up"
+    //);
 
     // Calculate votes here
-    if (candidateVoteScore[candidateNumber] >= scoreNeeded) {
+    if (applicantVoteScore[applicantNumber] >= scoreNeeded) {
+      isApproved[applicantNumber] = true;
       emit vote_results(
         "Accepted",
-        candidateNumber,
-        candidateVoteScore[candidateNumber],
+        applicantNumber,
+        applicantVoteScore[applicantNumber],
         scoreNeeded
       );
-    } else if (candidateVoteScore[candidateNumber] < scoreNeeded) {
+      addCommitteeMember(applicantAddress[applicantNumber]);
+    } else if (applicantVoteScore[applicantNumber] < scoreNeeded) {
       emit vote_results(
         "Not accepted",
-        candidateNumber,
-        candidateVoteScore[candidateNumber],
+        applicantNumber,
+        applicantVoteScore[applicantNumber],
         scoreNeeded
       );
     }
-    emit vote_close(candidateNumber, block.number);
+
+    isConcluded[applicantNumber] = true;
+    //distributeFee();
+
+    emit vote_close(applicantNumber, block.number);
   }
 
   function distributeFee() external payable {
@@ -169,14 +218,16 @@ contract AcceptanceVoting {
     return committeeChairman;
   }
 
-  function getVotingDeadline() external view returns (uint) {
-    return votingDeadline;
+  function getvotingTimeframe() external view returns (uint256) {
+    return votingTimeframe;
   }
 
   // will return the index of the voting state
   // i.e. VotingState.OPEN == 0
-  function getVotingState() external view returns (VotingState) {
-    return currentState;
+  function getVotingState(
+    uint256 applicantNumber
+  ) external view returns (VotingState) {
+    return currentState[applicantNumber];
   }
 
   function getFee() public view returns (uint256) {
@@ -184,26 +235,27 @@ contract AcceptanceVoting {
   }
 
   function getDeadline() public view returns (uint256) {
-    return votingDeadline;
+    return votingTimeframe;
   }
 
   function getCommitteeMembers() public view returns (address[] memory) {
     return committeeMembers;
   }
 
-  function changeDeadline(uint256 deadline) public isChairman {
-    votingDeadline = deadline;
+  function changeDeadline(uint256 votingDuration) public isChairman {
+    votingTimeframe = votingDuration;
   }
 
   function changeFee(uint256 fee) public isChairman {
     applicationFee = fee;
   }
 
+  /*
   function changeCommitteeSize(uint32 size) public isChairman {
     committeeSize = size;
     emit new_committee_size(size);
   }
-
+  */
   function removeCommiteeMember(address user) public isChairman {
     require(isCommitteeMember[user], "User is not a current committee Member");
     require(committeeMembers.length > 0, "Commitee is empty");
@@ -221,10 +273,10 @@ contract AcceptanceVoting {
   }
 
   function addCommitteeMember(address user) public isChairman {
-    require(
-      committeeMembers.length < committeeSize,
-      "Max committee Members size"
-    );
+    //require(
+    //  committeeMembers.length < committeeSize,
+    //  "Max committee Members size"
+    //);
     committeeMembers.push(user);
     isCommitteeMember[user] = true;
     emit new_committee_member(user);
