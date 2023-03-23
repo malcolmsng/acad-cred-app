@@ -230,6 +230,105 @@ contract Credential {
   }
 
   /**
+    @dev Compare equality of 2 strings
+    @param a First string to compare
+    @param b Second string to compare first string against
+  */
+  function compareStrings(
+    string memory a,
+    string memory b
+  ) private pure returns (bool) {
+    return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
+  }
+
+  /**
+    @dev Encode a credential into a formatted string
+    @param credId The id of the credential to encode
+  */
+  function encodeCredentialToString(
+    uint256 credId
+  ) private view returns (string memory) {
+    credential memory c = credentials[credId];
+
+    //Check for Revoked / Expired state of Credential
+    if (compareStrings(credentialStateToString(c.state), "REVOKED")) {
+      return
+        string(
+          abi.encodePacked(
+            "Credential for student ",
+            c.studentName,
+            " has been revoked",
+            "\n"
+          )
+        );
+    } else if (compareStrings(credentialStateToString(c.state), "EXPIRED")) {
+      return
+        string(
+          abi.encodePacked(
+            "Credential for student ",
+            c.studentName,
+            " has expired",
+            "\n"
+          )
+        );
+    } else if (compareStrings(credentialStateToString(c.state), "DELETED")) {
+      return "";
+    }
+
+    //If Active State
+    return
+      string(
+        abi.encodePacked(
+          "ID: ",
+          uint256ToString(credId),
+          "\n",
+          "Student Name: ",
+          c.studentName,
+          "\n",
+          "Student Number: ",
+          c.studentNumber,
+          "\n",
+          "Course Name: ",
+          c.courseName,
+          "\n",
+          "Degree Level: ",
+          c.degreeLevel,
+          "\n",
+          "Endorser Name: ",
+          c.endorserName,
+          "\n",
+          "Issuance Date: ",
+          uintToString(c.issuanceDate),
+          "\n",
+          "Expiry Date: ",
+          uintToString(c.expiryDate),
+          "\n",
+          "State: ",
+          credentialStateToString(c.state),
+          "\n",
+          "Issuer: ",
+          addressToString(c.issuer),
+          "\n",
+          "Owner: ",
+          addressToString(c.owner),
+          "\n"
+        )
+      );
+  }
+
+  /**
+    @dev Concat an array of strings into a string
+    @param words The array of strings to concat
+  */
+  function concat(string[] memory words) private pure returns (string memory) {
+    bytes memory output;
+    for (uint256 i = 0; i < words.length; i++) {
+      output = abi.encodePacked(output, words[i]);
+    }
+    return string(output);
+  }
+
+  /**
     @dev View all credentials
     @return _credentials An array of all credentials that have been created as a string
    */
@@ -237,7 +336,13 @@ contract Credential {
     public
     view
     returns (string memory _credentials)
-  {}
+  {
+    string[] memory creds = new string[](numCredentials);
+    for (uint256 i = 0; i < numCredentials; i++) {
+      creds[i] = encodeCredentialToString(i);
+    }
+    _credentials = concat(creds);
+  }
 
   /**
     @dev View credential by credId
@@ -246,16 +351,49 @@ contract Credential {
    */
   function viewCredentialById(
     uint256 credId
-  ) public view returns (string memory _credential) {}
+  ) public view validCredentialId(credId) returns (string memory _credential) {
+    _credential = encodeCredentialToString(credId);
+  }
 
   /**
     @dev View all credentials of student
     @param studentName The student name to view all the credentials of
     @return _credentials All the credentials of the student to be viewed as a string
   */
-  function viewAllCredentialsOfStudent(
+  function viewAllCredentialsOfStudentByStudentName(
     string memory studentName
-  ) public view returns (string memory _credentials) {}
+  ) public view returns (string memory _credentials) {
+    string[] memory creds = new string[](numCredentials);
+    for (uint256 i = 0; i < numCredentials; i++) {
+      if (
+        keccak256(bytes(credentials[i].studentName)) ==
+        keccak256(bytes(studentName))
+      ) {
+        creds[i] = encodeCredentialToString(i);
+      }
+    }
+    _credentials = concat(creds);
+  }
+
+  /**
+    @dev View all credentials of student
+    @param studentNumber The student number to view all the credentials of
+    @return _credentials All the credentials of the student to be viewed as a string
+  */
+  function viewAllCredentialsOfStudentByStudentNumber(
+    string memory studentNumber
+  ) public view returns (string memory _credentials) {
+    string[] memory creds = new string[](numCredentials);
+    for (uint256 i = 0; i < numCredentials; i++) {
+      if (
+        keccak256(bytes(credentials[i].studentNumber)) ==
+        keccak256(bytes(studentNumber))
+      ) {
+        creds[i] = encodeCredentialToString(i);
+      }
+    }
+    _credentials = concat(creds);
+  }
 
   //Getters
   function getCredentialStudentName(
@@ -328,5 +466,80 @@ contract Credential {
     uint256 credId
   ) public view validCredentialId(credId) returns (address) {
     return credentials[credId].owner;
+  }
+
+  //helper method to convert uint256 into string
+  function uintToString(uint _i) private pure returns (string memory) {
+    if (_i == 0) {
+      return "0";
+    }
+    uint j = _i;
+    uint length;
+    while (j != 0) {
+      length++;
+      j /= 10;
+    }
+    bytes memory bstr = new bytes(length);
+    uint k = length;
+    while (_i != 0) {
+      k = k - 1;
+      uint8 temp = uint8(48 + (_i % 10));
+      bytes1 b1 = bytes1(temp);
+      bstr[k] = b1;
+      _i /= 10;
+    }
+    return string(bstr);
+  }
+
+  //helper method to convert uint256 into string
+  function uint256ToString(uint256 _i) private pure returns (string memory) {
+    if (_i == 0) {
+      return "0";
+    }
+    uint256 j = _i;
+    uint256 length;
+    while (j != 0) {
+      length++;
+      j /= 10;
+    }
+    bytes memory bstr = new bytes(length);
+    uint256 k = length;
+    while (_i != 0) {
+      k = k - 1;
+      uint8 temp = uint8(48 + (_i % 10));
+      bytes1 b1 = bytes1(temp);
+      bstr[k] = b1;
+      _i /= 10;
+    }
+    return string(bstr);
+  }
+
+  //helper method to convert address into string
+  function addressToString(
+    address _address
+  ) private pure returns (string memory) {
+    bytes32 value = keccak256(abi.encodePacked(_address));
+    bytes memory alphabet = "0123456789abcdef";
+    bytes memory str = new bytes(42);
+    str[0] = "0";
+    str[1] = "x";
+    for (uint256 i = 0; i < 20; i++) {
+      str[2 + i * 2] = alphabet[uint8(value[i + 12] >> 4)];
+      str[3 + i * 2] = alphabet[uint8(value[i + 12] & 0x0f)];
+    }
+    return string(str);
+  }
+
+  //helper method to convert credential state into string
+  function credentialStateToString(
+    credentialState _state
+  ) private pure returns (string memory) {
+    if (_state == credentialState.ACTIVE) {
+      return "ACTIVE";
+    } else if (_state == credentialState.REVOKED) {
+      return "REVOKED";
+    } else if (_state == credentialState.EXPIRED) {
+      return "EXPIRED";
+    }
   }
 }
