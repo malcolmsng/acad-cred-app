@@ -25,7 +25,7 @@ contract('Unit Test', function (accounts) {
   });
 
 
-  console.log('Testing Institution contract');
+  console.log('Testing Institution and Acceptance Voting contract');
 
   it('Add Institution', async () => {
     // Create approved institution
@@ -115,23 +115,113 @@ contract('Unit Test', function (accounts) {
     await truffleAssert.reverts(institutionInstance.deleteInstitution(0, { from: accounts[1] }), 'Institution has already been deleted from the system.');
   });
 
+  //////////
+
+  //console.log('Testing AcceptanceVoting contract');
+
+  it('Add member', async () => {
+    // Add member
+    let makeM1 = await acceptanceVotingInstance.addCommitteeMember(accounts[6]);
+    truffleAssert.eventEmitted(makeM1, 'new_committee_member');
+
+    let makeM2 = await acceptanceVotingInstance.addCommitteeMember(accounts[7]);
+    truffleAssert.eventEmitted(makeM2, 'new_committee_member');
+
+    let makeM3 = await acceptanceVotingInstance.addCommitteeMember(accounts[8]);
+    truffleAssert.eventEmitted(makeM3, 'new_committee_member');
+  });
+
+  it('Incorrect add member', async () => {
+    // User cannot add member if user is not a chairman
+    await truffleAssert.reverts(acceptanceVotingInstance.addCommitteeMember(accounts[9], {from: accounts[1]}), 'Only Chairman can call this function');
+
+    // Current members cannot be added again
+    await truffleAssert.reverts(acceptanceVotingInstance.addCommitteeMember(accounts[6]), 'User is already a current committee Member');
+  });
+
+  it('Remove member', async () => {
+    // Add member
+    let makeM3 = await acceptanceVotingInstance.removeCommitteeMember(accounts[8]);
+    truffleAssert.eventEmitted(makeM3, 'remove_committee_member');
+  });
+
+  it('Incorrect remove member', async () => {
+    // User cannot remove member if user is not a chairman
+    await truffleAssert.reverts(acceptanceVotingInstance.removeCommitteeMember(accounts[7], {from: accounts[1]}), 'Only Chairman can call this function');
+
+    // Current members cannot be added again
+    await truffleAssert.reverts(acceptanceVotingInstance.removeCommitteeMember(accounts[8]), 'User is not a current committee Member');
+  });
+
+  it('Cannot vote when vote has not opened', async () => {
+    // User cannot remove member if user is not a chairman
+    await truffleAssert.reverts(acceptanceVotingInstance.vote(0, true, true, true, false, false, {from: accounts[6]}), 'Applicant is not open for voting');
+  });
+
+  it('Open vote', async () => {
+    // Open vote
+    let makeO1 = await acceptanceVotingInstance.openVote(0);
+    truffleAssert.eventEmitted(makeO1, 'vote_open');
+  });
+
+  it('Vote', async () => {
+    // Open vote
+    let makeV1 = await acceptanceVotingInstance.vote(0, true, true, true, true, true, {from: accounts[6]});
+    truffleAssert.eventEmitted(makeV1, 'voted');
+
+    let makeV2 = await acceptanceVotingInstance.vote(0, true, true, true, true, true, {from: accounts[7]});
+    truffleAssert.eventEmitted(makeV2, 'voted');
+  });
+
+  it('Cannot close vote', async () => {
+    // Too early to close vote
+    await truffleAssert.reverts(acceptanceVotingInstance.closeVote(0, 9), 'Deadline not up');
+  });
+
+  it('Close vote', async () => {
+    // Open vote
+    await acceptanceVotingInstance.changeDeadline(0);
+    let makeC1 = await acceptanceVotingInstance.closeVote(0, 9);
+    truffleAssert.eventEmitted(makeC1, 'vote_close');
+  });
+
+  it('Check approved status', async () => {
+    // Open vote
+    await institutionInstance.updateInstitutionStatus(0);
+    let makeS1 = await institutionInstance.getInstitutionState(0);
+    await assert.equal(makeS1, 0, 'Failed to approve institution');
+  });
+
+  it('Check pending status', async () => {
+    // Open vote
+    await institutionInstance.addInstitution(
+      'National University of Singaporea',
+      "Singapore",
+      "Singapore",
+      "1.1",
+      "101.1",
+      {from: accounts[2]}
+    );
+    let makeS2 = await institutionInstance.getInstitutionState(1);
+    await assert.equal(makeS2, 1, 'Institution status not pending');
+  });
+
+  it('Check rejected status', async () => {
+    // Open vote
+    await acceptanceVotingInstance.openVote(1);
+    await acceptanceVotingInstance.vote(1, true, true, true, true, true, {from: accounts[6]});
+    await acceptanceVotingInstance.vote(1, false, false, true, true, false, {from: accounts[7]});
+    await acceptanceVotingInstance.closeVote(1, 9);
+    await institutionInstance.updateInstitutionStatus(1);
+    let makeS3 = await institutionInstance.getInstitutionState(1);
+    await assert.equal(makeS3, 2, 'Failed to reject institution');
+  });
 
   //////////
 
   console.log('Testing Credential contract');
 
   it('Add Credential', async () => {
-    // Create approved institution
-    let makeI2 = await institutionInstance.addInstitution(
-      'Nanyang Technological University',
-      "Singapore",
-      "Singapore",
-      "1.3483",
-      "103.6831",
-      {from: accounts[1]}
-    );
-    let approveI1 = await institutionInstance.approveInstitution(1);
-
     // Create a credential with an expiry date
     let makeC1 = await credentialInstance.addCredential(
       'Lyn Tan',
@@ -139,7 +229,7 @@ contract('Unit Test', function (accounts) {
       'Information Systems',
       'Bachelor of Computing',
       'Dr Li Xiaofan',
-      1, // Institution ID
+      0, // Institution ID
       toUnixTime(2023, 3, 21), // Issuance date
       toUnixTime(2028, 3, 21), // Expiry date
       accounts[7], // Student A,
@@ -155,7 +245,7 @@ contract('Unit Test', function (accounts) {
       'Artificial Intelligence Specialisation',
       'Master of Computing',
       'Professor Tan Kian Lee',
-      1, // Institution ID
+      0, // Institution ID
       toUnixTime(2023, 3, 21), // Issuance date
       0, // Expiry date
       accounts[8], // Student B,
@@ -174,7 +264,7 @@ contract('Unit Test', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        1, // Institution ID
+        0, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         toUnixTime(2028, 3, 21), // Expiry date
         accounts[7], // Student A,
@@ -190,7 +280,7 @@ contract('Unit Test', function (accounts) {
       "Singapore",
       "1.2963",
       "103.8502",
-      {from: accounts[2]}
+      {from: accounts[3]}
       );
 
     // Unapproved institutions cannot add credential
@@ -218,7 +308,7 @@ contract('Unit Test', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        1, // Institution ID
+        0, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -233,7 +323,7 @@ contract('Unit Test', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        1, // Institution ID
+        0, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -248,7 +338,7 @@ contract('Unit Test', function (accounts) {
         '',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        1, // Institution ID
+        0, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -263,7 +353,7 @@ contract('Unit Test', function (accounts) {
         'Information Systems',
         '',
         'Dr Li Xiaofan',
-        1, // Institution ID
+        0, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -278,7 +368,7 @@ contract('Unit Test', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         '',
-        1, // Institution ID
+        0, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -293,7 +383,7 @@ contract('Unit Test', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        1, // Institution ID
+        0, // Institution ID
         0, // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -308,7 +398,7 @@ contract('Unit Test', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        1, // Institution ID
+        0, // Institution ID
         toUnixTime(2023, 8, 1), // Issuance date
         0, // Expiry date
         accounts[7], // Student A,
@@ -323,7 +413,7 @@ contract('Unit Test', function (accounts) {
         'Information Systems',
         'Bachelor of Computing',
         'Dr Li Xiaofan',
-        1, // Institution ID
+        0, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
         zeroAddress, // Student A,
@@ -352,4 +442,5 @@ contract('Unit Test', function (accounts) {
   it('Incorrect Delete Credential', async () => {
     await truffleAssert.reverts(credentialInstance.deleteCredential(1, { from: accounts[1] }), 'Only active credentials can be deleted');
   });
+
 });

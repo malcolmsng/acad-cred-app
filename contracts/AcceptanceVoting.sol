@@ -12,14 +12,14 @@ contract AcceptanceVoting {
   // member address => true if exist
   mapping(address => bool) isCommitteeMember;
 
+  // members => applicant => true if voted
+  mapping(address => mapping(uint256 => bool)) hasVoted;
+
   // applicantId => applicant address
   mapping(uint256 => address) applicantAddress;
 
   // applicantId => applicant name
   mapping(uint256 => string) applicantName;
-
-  // members => applicant => true if voted
-  mapping(address => mapping(uint256 => bool)) hasVoted;
 
   // applicant => votes it got
   mapping(uint256 => uint256) applicantVoteScore;
@@ -54,6 +54,7 @@ contract AcceptanceVoting {
   //Events
   event new_chairman(address newChairman);
   event new_committee_member(address newCommitteeMember);
+  event remove_committee_member(address committeeMember);
   //event new_committee_size(uint256 size);
   event voted(
     address committeeMember,
@@ -93,6 +94,8 @@ contract AcceptanceVoting {
   ) external {
     applicantAddress[institutionID] = institutionAddress;
     applicantName[institutionID] = institutionName;
+    applicantVoteScore[institutionID] = 0;
+    applicantVotingState[institutionID] = VotingState.CLOSED;
   }
 
   function getApplicantName(
@@ -122,7 +125,7 @@ contract AcceptanceVoting {
     require(isCommitteeMember[msg.sender], "You are not a committee member");
     require(
       applicantVotingState[applicantNumber] == VotingState.OPEN,
-      "applicant not open for voting"
+      "Applicant is not open for voting"
     );
     hasVoted[msg.sender][applicantNumber] = true;
 
@@ -174,10 +177,10 @@ contract AcceptanceVoting {
       currentState[applicantNumber] == VotingState.OPEN,
       "Vote is not open"
     );
-    //require(
-    //  applicantVoteOpenBlock[applicantNumber] + votingTimeframe >= block.number,
-    //  "Deadline not up"
-    //);
+    require(
+      applicantVoteOpenBlock[applicantNumber] + votingTimeframe <= block.number,
+      "Deadline not up"
+    );
 
     // Calculate votes here
     if (applicantVoteScore[applicantNumber] >= scoreNeeded) {
@@ -256,9 +259,9 @@ contract AcceptanceVoting {
     emit new_committee_size(size);
   }
   */
-  function removeCommiteeMember(address user) public isChairman {
+  function removeCommitteeMember(address user) public isChairman {
     require(isCommitteeMember[user], "User is not a current committee Member");
-    require(committeeMembers.length > 0, "Commitee is empty");
+    require(committeeMembers.length > 0, "Committee is empty");
     isCommitteeMember[user] = false;
 
     // Remove address from committee member array without preserving order
@@ -270,13 +273,15 @@ contract AcceptanceVoting {
         committeeMembers.pop();
       }
     }
+
+    emit remove_committee_member(user);
   }
 
   function addCommitteeMember(address user) public isChairman {
-    //require(
-    //  committeeMembers.length < committeeSize,
-    //  "Max committee Members size"
-    //);
+    require(
+      isCommitteeMember[user] != true,
+      "User is already a current committee Member"
+    );
     committeeMembers.push(user);
     isCommitteeMember[user] = true;
     emit new_committee_member(user);
