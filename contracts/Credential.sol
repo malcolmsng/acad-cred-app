@@ -7,6 +7,7 @@ import "./Institution.sol";
 contract Credential {
   enum credentialState {
     ACTIVE,
+    DELETED,
     REVOKED,
     EXPIRED
   }
@@ -17,20 +18,44 @@ contract Credential {
     string courseName;
     string degreeLevel;
     string endorserName;
+    string issuerName; //name of Institution
     uint issuanceDate;
     uint expiryDate;
     credentialState state;
     address issuer; //address of Institution
-    address owner;
+    address owner; //student (recipient of credential)
   }
+
+  event add_credential(
+    uint256 credId,
+    address issuer,
+    string issuerName,
+    address owner,
+    string studentName,
+    string courseName
+  );
+  event delete_credential(
+    address issuer,
+    string issuerName,
+    address owner,
+    string studentName,
+    string courseName
+  );
+  event revoke_credential(
+    address issuer,
+    string issuerName,
+    address owner,
+    string studentName,
+    string courseName
+  );
 
   uint256 public numCredentials = 0;
   mapping(uint256 => credential) public credentials;
 
   Institution institutionContract;
 
-  constructor(Institution insitutionAddr) public {
-    institutionContract = insitutionAddr;
+  constructor(Institution insitutionContractAddr) public {
+    institutionContract = insitutionContractAddr;
   }
 
   /**
@@ -79,29 +104,130 @@ contract Credential {
 
   /**
       @dev Create a credential
+      @param studentName Name of student owner of credential
+      @param studentNumber The student number of owner of credential
+      @param courseName The name of the course or major the student studied
+      @param degreeLevel The level of the degree earned by the student (e.g. bachelor's, master's)
+      @param endorserName Name of authorised person who endorsed the credential
+      @param institutionId The id of the institution
+      @param issuanceDate The date the credential was issued
+      @param expiryDate The date the credential expires (optional, 0 if null)
+      @param student The address of the student owner of the credential
       @return credId The id of the credential that was added
      */
-  function addCredential()
+  function addCredential(
+    string memory studentName,
+    string memory studentNumber,
+    string memory courseName,
+    string memory degreeLevel,
+    string memory endorserName,
+    uint256 institutionId,
+    uint issuanceDate,
+    uint expiryDate, // optional, 0 if null
+    address student
+  )
     public
-    approvedInstitutionOnly(credId)
+    payable
+    approvedInstitutionOnly(institutionId)
     returns (uint256 credId)
-  {}
+  {
+    require(msg.value >= 1E16, "At least 0.01ETH needed to create credential");
+
+    require(bytes(studentName).length > 0, "Student name cannot be empty");
+    require(bytes(studentNumber).length > 0, "Student number cannot be empty");
+    require(bytes(courseName).length > 0, "Course name cannot be empty");
+    require(bytes(degreeLevel).length > 0, "Degree level cannot be empty");
+    require(bytes(endorserName).length > 0, "Endorser name cannot be empty");
+    require(issuanceDate > 0, "Issuance date cannot be empty");
+    require(
+      issuanceDate <= block.timestamp,
+      "Issuance date cannot be a future date. Please enter an issuance date that is today or in the past."
+    );
+    require(student != address(0), "Student address cannot be empty");
+
+    // New credential object
+    credential memory newCredential = credential(
+      studentName,
+      studentNumber,
+      courseName,
+      degreeLevel,
+      endorserName,
+      institutionContract.getInstitutionName(institutionId),
+      issuanceDate,
+      expiryDate,
+      credentialState.ACTIVE,
+      msg.sender, // Issuer (institution)
+      student
+    );
+
+    uint256 newCredentialId = numCredentials++;
+    credentials[newCredentialId] = newCredential; // commit to state variable
+
+    emit add_credential(
+      newCredentialId,
+      msg.sender,
+      newCredential.issuerName,
+      newCredential.owner,
+      newCredential.studentName,
+      newCredential.courseName
+    );
+    return newCredentialId; // return new credentialId
+  }
 
   /**
-    @dev Delete a credential
+    @dev Delete an active credential to edit and reupload a credential
     @param credId The id of the credential to delete
    */
   function deleteCredential(
     uint256 credId
-  ) public approvedInstitutionOnly(credId) {}
+  ) public issuerOnly(credId) validCredentialId(credId) {
+    require(
+      credentials[credId].state != credentialState.DELETED,
+      "Credential has already been deleted."
+    );
+    require(
+      credentials[credId].state == credentialState.ACTIVE,
+      "Only active credentials can be deleted."
+    );
+
+    // Lazy deletion, numCredentials does not change
+    credentials[credId].state = credentialState.DELETED;
+
+    emit delete_credential(
+      msg.sender,
+      credentials[credId].issuerName,
+      credentials[credId].owner,
+      credentials[credId].studentName,
+      credentials[credId].courseName
+    );
+  }
 
   /**
-    @dev Revoke a credential
+    @dev Revoke an active credential
     @param credId The id of the credential to revoke
    */
   function revokeCredential(
     uint256 credId
-  ) public approvedInstitutionOnly(credId) {}
+  ) public issuerOnly(credId) validCredentialId(credId) {
+    require(
+      credentials[credId].state != credentialState.REVOKED,
+      "Credential has already been revoked."
+    );
+    require(
+      credentials[credId].state == credentialState.ACTIVE,
+      "Only active credentials can be revoked"
+    );
+
+    credentials[credId].state = credentialState.REVOKED;
+
+    emit revoke_credential(
+      msg.sender,
+      credentials[credId].issuerName,
+      credentials[credId].owner,
+      credentials[credId].studentName,
+      credentials[credId].courseName
+    );
+  }
 
   /**
     @dev Encode a credential into a formatted string
