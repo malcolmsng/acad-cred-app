@@ -1,7 +1,6 @@
 pragma solidity ^0.5.0;
 
 contract AcceptanceVoting {
-
   enum VotingState {
     OPEN,
     CLOSED
@@ -87,16 +86,18 @@ contract AcceptanceVoting {
     _;
   }
 
-  function addApplicant (
-    uint256 institutionID, 
+  function addApplicant(
+    uint256 institutionID,
     address institutionAddress,
     string calldata institutionName
-    ) external {
+  ) external {
     applicantAddress[institutionID] = institutionAddress;
     applicantName[institutionID] = institutionName;
   }
 
-  function getApplicantName(uint256 applicantNumber) external view returns (string memory) {
+  function getApplicantName(
+    uint256 applicantNumber
+  ) external view returns (string memory) {
     return applicantName[applicantNumber];
   }
 
@@ -104,7 +105,9 @@ contract AcceptanceVoting {
     return isApproved[applicantNumber];
   }
 
-  function checkConcluded(uint256 applicantNumber) external view returns (bool) {
+  function checkConcluded(
+    uint256 applicantNumber
+  ) external view returns (bool) {
     return isConcluded[applicantNumber];
   }
 
@@ -167,7 +170,10 @@ contract AcceptanceVoting {
     uint256 applicantNumber,
     uint256 scoreNeeded
   ) external isChairman {
-    require(currentState[applicantNumber] == VotingState.OPEN, "Vote is not open");
+    require(
+      currentState[applicantNumber] == VotingState.OPEN,
+      "Vote is not open"
+    );
     //require(
     //  applicantVoteOpenBlock[applicantNumber] + votingTimeframe >= block.number,
     //  "Deadline not up"
@@ -218,7 +224,9 @@ contract AcceptanceVoting {
 
   // will return the index of the voting state
   // i.e. VotingState.OPEN == 0
-  function getVotingState(uint256 applicantNumber) external view returns (VotingState) {
+  function getVotingState(
+    uint256 applicantNumber
+  ) external view returns (VotingState) {
     return currentState[applicantNumber];
   }
 

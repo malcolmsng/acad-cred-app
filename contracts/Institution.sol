@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 import "./AcceptanceVoting.sol";
 
 contract Institution {
-
   enum institutionState {
     APPROVED, //approved after vote
     PENDING, //pending voting
@@ -87,7 +86,11 @@ contract Institution {
     uint256 newInstitutionId = numInstitutions++;
     institutions[newInstitutionId] = newInst; // commit to state variable
 
-    acceptanceVotingContract.addApplicant(newInstitutionId, msg.sender, institutionName);
+    acceptanceVotingContract.addApplicant(
+      newInstitutionId,
+      msg.sender,
+      institutionName
+    );
 
     emit add_institution(
       institutions[newInstitutionId].owner,
@@ -116,7 +119,7 @@ contract Institution {
 
     if (approvalResult == true) {
       institutions[instId].state = institutionState.APPROVED;
-      
+
       emit approve_institution(
         institutions[instId].owner,
         institutions[instId].name,
@@ -127,8 +130,6 @@ contract Institution {
     } else {
       institutions[instId].state = institutionState.PENDING;
     }
-    
-
   }
 
   //Getters
