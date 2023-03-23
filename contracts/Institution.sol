@@ -133,10 +133,12 @@ contract Institution {
     emit delete_institution(instId);
   }
 
-  /**
-    @dev Approve an institution
-    @param instId The id of the institution to approve
-   */
+  /*
+  Dummy function for initial testing
+
+  @dev Approve an institution
+  @param instId The id of the institution to approve
+  
   function approveInstitution(uint256 instId) public votedOnly {
     // Dummy code just to enable testing of credential functions
     institutions[instId].state = institutionState.APPROVED;
@@ -147,7 +149,12 @@ contract Institution {
       institutions[instId].state
     );
   }
+  */
 
+  /**
+    @dev Update an institution status
+    @param instId The id of the institution to approve
+   */
   function updateInstitutionStatus(uint256 instId) public votedOnly {
     bool approvalResult = acceptanceVotingContract.checkApproved(instId);
     bool votingConcluded = acceptanceVotingContract.checkConcluded(instId);
