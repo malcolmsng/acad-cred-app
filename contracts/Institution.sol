@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: UNLICENSE
-pragma solidity >=0.5.0;
+pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "./AcceptanceVoting.sol";

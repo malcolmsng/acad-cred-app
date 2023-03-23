@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: UNLICENSE
-pragma solidity >=0.5.0;
+pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "./Institution.sol";
@@ -60,6 +60,7 @@ contract Credential {
 
   /**
     @dev Require credential owner only
+    @param credId The id of the credential to check
    */
   modifier ownerOnly(uint256 credId) {
     require(
@@ -71,6 +72,7 @@ contract Credential {
 
   /**
     @dev Require credential issuer only
+    @param credId The id of the credential to check
    */
   modifier issuerOnly(uint256 credId) {
     require(
