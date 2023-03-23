@@ -230,11 +230,32 @@ contract Credential {
   }
 
   /**
+    @dev Compare equality of 2 strings
+    @param a First string to compare
+    @param b Second string to compare first string against
+  */
+  function compareStrings(string memory a, string memory b) private pure returns(bool) {
+    return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
+  }
+
+  /**
     @dev Encode a credential into a formatted string
     @param credId The id of the credential to encode
   */
-  function encodeCredentialToString(uint256 credId) public view returns (string memory) {
+  function encodeCredentialToString(uint256 credId) private view returns (string memory) {
+
     credential memory c = credentials[credId];
+
+    //Check for Revoked / Expired state of Credential
+    if (compareStrings (credentialStateToString(c.state), "REVOKED")) {
+      return string(abi.encodePacked("Credential for student ", c.studentName, " has been revoked", "\n"));
+    } else if (compareStrings (credentialStateToString(c.state), "EXPIRED")) {
+      return string(abi.encodePacked("Credential for student ", c.studentName, " has expired", "\n"));
+    } else if (compareStrings (credentialStateToString(c.state), "DELETED")) {
+      return "";
+    }
+
+    //If Active State
     return string(abi.encodePacked(
         "ID: ", uint256ToString(credId), "\n",
         "Student Name: ", c.studentName, "\n",
@@ -254,7 +275,7 @@ contract Credential {
     @dev Concat an array of strings into a string
     @param words The array of strings to concat
   */
-  function concat(string[] memory words) public pure returns (string memory) {
+  function concat(string[] memory words) private pure returns (string memory) {
       bytes memory output;
       for (uint256 i = 0; i < words.length; i++) {
           output = abi.encodePacked(output, words[i]);
@@ -268,7 +289,7 @@ contract Credential {
    */
   function viewAllCredentials() public view returns (string memory _credentials) {
     string[] memory creds = new string[](numCredentials);
-    for (uint256 i = 1; i < numCredentials; i++) {
+    for (uint256 i = 0; i < numCredentials; i++) {
       creds[i] = encodeCredentialToString(i);
     }
     _credentials = concat(creds);
@@ -280,8 +301,7 @@ contract Credential {
    */
   function viewCredentialById(
     uint256 credId
-  ) public view returns (string memory _credential) {
-    require(credId < numCredentials, "Invalid credential ID");
+  ) public view validCredentialId(credId) returns (string memory _credential) {
     _credential = encodeCredentialToString(credId);
   }
 
@@ -290,12 +310,29 @@ contract Credential {
     @param studentName The student name to view all the credentials of
     @return _credentials All the credentials of the student to be viewed as a string
   */
-  function viewAllCredentialsOfStudent(
+  function viewAllCredentialsOfStudentByStudentName(
     string memory studentName
   ) public view returns (string memory _credentials) {
     string[] memory creds = new string[](numCredentials);
-    for (uint256 i = 1; i < numCredentials; i++) {
+    for (uint256 i = 0; i < numCredentials; i++) {
       if (keccak256(bytes(credentials[i].studentName)) == keccak256(bytes(studentName))) {
+        creds[i] = encodeCredentialToString(i);
+      }
+    }
+    _credentials = concat(creds);
+  }
+
+   /**
+    @dev View all credentials of student
+    @param studentNumber The student number to view all the credentials of
+    @return _credentials All the credentials of the student to be viewed as a string
+  */
+  function viewAllCredentialsOfStudentByStudentNumber(
+    string memory studentNumber
+  ) public view returns (string memory _credentials) {
+    string[] memory creds = new string[](numCredentials);
+    for (uint256 i = 0; i < numCredentials; i++) {
+      if (keccak256(bytes(credentials[i].studentNumber)) == keccak256(bytes(studentNumber))) {
         creds[i] = encodeCredentialToString(i);
       }
     }
