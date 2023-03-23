@@ -109,9 +109,7 @@ contract AcceptanceVoting {
     return isApproved[applicantNumber];
   }
 
-  function checkConcluded(
-    uint256 applicantNumber
-  ) public view returns (bool) {
+  function checkConcluded(uint256 applicantNumber) public view returns (bool) {
     return isConcluded[applicantNumber];
   }
 
@@ -208,14 +206,13 @@ contract AcceptanceVoting {
     emit vote_close(applicantNumber, block.number);
   }
 
-  function distributeFee() public payable {
-    // Divide the application fee equally among all committee members
-    uint256 val = applicationFee / committeeMembers.length;
-    for (uint256 i = 0; i < committeeMembers.length; i++) {
-      address payable recipient = payable(address(uint160(committeeMembers[i])));
-      recipient.transfer(val);
-    }
-  }
+  // function distributeFee() public payable {
+  //   // Divide the application fee equally among all committee members
+  //   uint256 val = applicationFee / committeeMembers.length;
+  //   for (uint256 i = 0; i < committeeMembers.length; i++) {
+  //     sendMoney(committeeMembers[i], val);
+  //   }
+  // }
 
   // getters
   function getCommitteeChairman() public view returns (address) {
@@ -254,12 +251,11 @@ contract AcceptanceVoting {
     applicationFee = fee;
   }
 
-  /*
   function changeCommitteeSize(uint32 size) public isChairman {
     committeeSize = size;
     emit new_committee_size(size);
   }
-  */
+
   function removeCommitteeMember(address user) public isChairman {
     require(isCommitteeMember[user], "User is not a current committee Member");
     require(committeeMembers.length > 0, "Committee is empty");
@@ -279,7 +275,10 @@ contract AcceptanceVoting {
   }
 
   function addCommitteeMember(address user) public isChairman {
-    require(committeeMembers.length < committeeSize, "Committee max size reached");
+    require(
+      committeeMembers.length < committeeSize,
+      "Committee max size reached"
+    );
     require(
       isCommitteeMember[user] != true,
       "User is already a current committee Member"
