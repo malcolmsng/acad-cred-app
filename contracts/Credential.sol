@@ -468,7 +468,7 @@ contract Credential {
     return credentials[credId].owner;
   }
 
-  //helper method to convert uint256 into string
+  //helper method to convert uint into string
   function uintToString(uint _i) private pure returns (string memory) {
     if (_i == 0) {
       return "0";
