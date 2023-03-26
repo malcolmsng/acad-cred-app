@@ -34,7 +34,7 @@ contract Institution {
 
   AcceptanceVoting acceptanceVotingContract;
 
-  constructor(AcceptanceVoting acceptanceVotingAddr) public {
+  constructor(AcceptanceVoting acceptanceVotingAddr) {
     _owner = msg.sender;
     acceptanceVotingContract = acceptanceVotingAddr;
   }
