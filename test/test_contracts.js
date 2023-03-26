@@ -24,19 +24,18 @@ contract('Unit Test', function (accounts) {
     institutionInstance = await Institution.deployed();
   });
 
-
   console.log('Testing Institution and Acceptance Voting contract');
 
   it('Add Institution', async () => {
     // Create approved institution
     let makeI1 = await institutionInstance.addInstitution(
       'National University of Singapore',
-      "Singapore",
-      "Singapore",
-      "1.290270",
-      "103.851959",
-      {from: accounts[1]}
-      );
+      'Singapore',
+      'Singapore',
+      '1.290270',
+      '103.851959',
+      { from: accounts[1] },
+    );
     await assert.notStrictEqual(makeI1, undefined, 'Failed to add institution');
     truffleAssert.eventEmitted(makeI1, 'add_institution');
   });
@@ -46,51 +45,51 @@ contract('Unit Test', function (accounts) {
     await truffleAssert.reverts(
       institutionInstance.addInstitution(
         '', // Empty institution name
-        "Singapore",
-        "Singapore",
-        "1.290270",
-        "103.851959",
-        {from: accounts[1]}
-        ),
+        'Singapore',
+        'Singapore',
+        '1.290270',
+        '103.851959',
+        { from: accounts[1] },
+      ),
       'Institution name cannot be empty',
     );
 
     // Institution country cannot be empty
     await truffleAssert.reverts(
       institutionInstance.addInstitution(
-        'National University of Singapore', 
-        "", // Empty institution name
-        "Singapore",
-        "1.290270",
-        "103.851959",
-        {from: accounts[1]}
-        ),
+        'National University of Singapore',
+        '', // Empty institution name
+        'Singapore',
+        '1.290270',
+        '103.851959',
+        { from: accounts[1] },
+      ),
       'Institution country cannot be empty',
     );
 
     // Institution city cannot be empty
     await truffleAssert.reverts(
       institutionInstance.addInstitution(
-        'National University of Singapore', 
-        "Singapore",
-        "", // Empty institution city
-        "1.290270",
-        "103.851959",
-        {from: accounts[1]}
-        ),
+        'National University of Singapore',
+        'Singapore',
+        '', // Empty institution city
+        '1.290270',
+        '103.851959',
+        { from: accounts[1] },
+      ),
       'Institution city cannot be empty',
     );
 
     // Institution latitude cannot be empty
     await truffleAssert.reverts(
       institutionInstance.addInstitution(
-        'National University of Singapore', 
-        "Singapore",
-        "Singapore",
-        "", // Empty institution latitude
-        "103.851959",
-        {from: accounts[1]}
-        ),
+        'National University of Singapore',
+        'Singapore',
+        'Singapore',
+        '', // Empty institution latitude
+        '103.851959',
+        { from: accounts[1] },
+      ),
       'Institution latitude cannot be empty',
     );
 
@@ -98,12 +97,12 @@ contract('Unit Test', function (accounts) {
     await truffleAssert.reverts(
       institutionInstance.addInstitution(
         'National University of Singapore',
-        "Singapore",
-        "Singapore",
-        "1.290270",
-        "", // Empty institution longitude
-        {from: accounts[1]}
-        ),
+        'Singapore',
+        'Singapore',
+        '1.290270',
+        '', // Empty institution longitude
+        { from: accounts[1] },
+      ),
       'Institution longitude cannot be empty',
     );
   });
@@ -112,7 +111,10 @@ contract('Unit Test', function (accounts) {
     let deleteI1 = await institutionInstance.deleteInstitution(0, { from: accounts[1] });
     truffleAssert.eventEmitted(deleteI1, 'delete_institution');
 
-    await truffleAssert.reverts(institutionInstance.deleteInstitution(0, { from: accounts[1] }), 'Institution has already been deleted from the system.');
+    await truffleAssert.reverts(
+      institutionInstance.deleteInstitution(0, { from: accounts[1] }),
+      'Institution has already been deleted from the system.',
+    );
   });
 
   //////////
@@ -133,7 +135,10 @@ contract('Unit Test', function (accounts) {
 
   it('Incorrect add member', async () => {
     // User cannot add member if user is not a chairman
-    await truffleAssert.reverts(acceptanceVotingInstance.addCommitteeMember(accounts[9], {from: accounts[1]}), 'Only Chairman can call this function');
+    await truffleAssert.reverts(
+      acceptanceVotingInstance.addCommitteeMember(accounts[9], { from: accounts[1] }),
+      'Only Chairman can call this function',
+    );
 
     // Current members cannot be added again
     await truffleAssert.reverts(acceptanceVotingInstance.addCommitteeMember(accounts[6]), 'User is already a current committee Member');
@@ -147,7 +152,10 @@ contract('Unit Test', function (accounts) {
 
   it('Incorrect remove member', async () => {
     // User cannot remove member if user is not a chairman
-    await truffleAssert.reverts(acceptanceVotingInstance.removeCommitteeMember(accounts[7], {from: accounts[1]}), 'Only Chairman can call this function');
+    await truffleAssert.reverts(
+      acceptanceVotingInstance.removeCommitteeMember(accounts[7], { from: accounts[1] }),
+      'Only Chairman can call this function',
+    );
 
     // Current members cannot be added again
     await truffleAssert.reverts(acceptanceVotingInstance.removeCommitteeMember(accounts[8]), 'User is not a current committee Member');
@@ -155,7 +163,10 @@ contract('Unit Test', function (accounts) {
 
   it('Cannot vote when vote has not opened', async () => {
     // User cannot remove member if user is not a chairman
-    await truffleAssert.reverts(acceptanceVotingInstance.vote(0, true, true, true, false, false, {from: accounts[6]}), 'Applicant is not open for voting');
+    await truffleAssert.reverts(
+      acceptanceVotingInstance.vote(0, true, true, true, false, false, { from: accounts[6] }),
+      'Applicant is not open for voting',
+    );
   });
 
   it('Open vote', async () => {
@@ -166,10 +177,10 @@ contract('Unit Test', function (accounts) {
 
   it('Vote', async () => {
     // Open vote
-    let makeV1 = await acceptanceVotingInstance.vote(0, true, true, true, true, true, {from: accounts[6]});
+    let makeV1 = await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[6] });
     truffleAssert.eventEmitted(makeV1, 'voted');
 
-    let makeV2 = await acceptanceVotingInstance.vote(0, true, true, true, true, true, {from: accounts[7]});
+    let makeV2 = await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[7] });
     truffleAssert.eventEmitted(makeV2, 'voted');
   });
 
@@ -194,14 +205,9 @@ contract('Unit Test', function (accounts) {
 
   it('Check pending status', async () => {
     // Open vote
-    await institutionInstance.addInstitution(
-      'National University of Singaporea',
-      "Singapore",
-      "Singapore",
-      "1.1",
-      "101.1",
-      {from: accounts[2]}
-    );
+    await institutionInstance.addInstitution('National University of Singaporea', 'Singapore', 'Singapore', '1.1', '101.1', {
+      from: accounts[2],
+    });
     let makeS2 = await institutionInstance.getInstitutionState(1);
     await assert.equal(makeS2, 1, 'Institution status not pending');
   });
@@ -209,8 +215,8 @@ contract('Unit Test', function (accounts) {
   it('Check rejected status', async () => {
     // Open vote
     await acceptanceVotingInstance.openVote(1);
-    await acceptanceVotingInstance.vote(1, true, true, true, true, true, {from: accounts[6]});
-    await acceptanceVotingInstance.vote(1, false, false, true, true, false, {from: accounts[7]});
+    await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[6] });
+    await acceptanceVotingInstance.vote(1, false, false, true, true, false, { from: accounts[7] });
     await acceptanceVotingInstance.closeVote(1, 9);
     await institutionInstance.updateInstitutionStatus(1);
     let makeS3 = await institutionInstance.getInstitutionState(1);
@@ -276,12 +282,12 @@ contract('Unit Test', function (accounts) {
     // Create pending (not approved) institution
     let makeI3 = await institutionInstance.addInstitution(
       'Singapore Management University',
-      "Singapore",
-      "Singapore",
-      "1.2963",
-      "103.8502",
-      {from: accounts[3]}
-      );
+      'Singapore',
+      'Singapore',
+      '1.2963',
+      '103.8502',
+      { from: accounts[3] },
+    );
 
     // Unapproved institutions cannot add credential
     await truffleAssert.reverts(
@@ -443,4 +449,88 @@ contract('Unit Test', function (accounts) {
     await truffleAssert.reverts(credentialInstance.deleteCredential(1, { from: accounts[1] }), 'Only active credentials can be deleted');
   });
 
+  it('View Credential by Id', async () => {
+    //Add a credential (1st Credential of Remus)
+    await credentialInstance.addCredential(
+      'Remus Kwan',
+      'A0223344L',
+      'Computer Science',
+      'Bachelor of Computing',
+      'Dr Tan Keng Soon',
+      0, // Institution ID
+      toUnixTime(2023, 3, 26), // Issuance date
+      toUnixTime(2028, 4, 21), // Expiry date
+      accounts[9], // Student C,
+      { from: accounts[1], value: oneEth.dividedBy(100) },
+    );
+
+    let credentialView = await credentialInstance.viewCredentialById(2, { from: accounts[1] });
+    await assert.strictEqual(
+      credentialView,
+      `ID: 2\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Computer Science\nDegree Level: Bachelor of Computing\nEndorser Name: Dr Tan Keng Soon\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\nIssuer: ${accounts[1]}\nOwner: ${accounts[9]}\n`,
+      'Student credential info is not correct',
+    );
+  });
+
+  it('View Credentials by Student Name', async () => {
+    //Add a second credential (2nd Credential of Remus)
+    let makeC1 = await credentialInstance.addCredential(
+      'Remus Kwan',
+      'A0223344L',
+      'Business Analytics',
+      'Bachelor of Business Administration',
+      'Dr Bock See',
+      0, // Institution ID
+      toUnixTime(2023, 3, 26), // Issuance date
+      toUnixTime(2028, 4, 21), // Expiry date
+      accounts[9], // Student C,
+      { from: accounts[1], value: oneEth.dividedBy(100) },
+    );
+
+    let studentCredentials = await credentialInstance.viewAllCredentialsOfStudentByStudentName('Remus Kwan', { from: accounts[1] });
+    await assert.strictEqual(
+      studentCredentials,
+      `ID: 2\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Computer Science\nDegree Level: Bachelor of Computing\nEndorser Name: Dr Tan Keng Soon\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\nIssuer: ${accounts[1]}\nOwner: ${accounts[9]}\nID: 3\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Business Analytics\nDegree Level: Bachelor of Business Administration\nEndorser Name: Dr Bock See\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\nIssuer: ${accounts[1]}\nOwner: ${accounts[9]}\n`,
+      'Student credential info is not correct',
+    );
+  });
+
+  it('View Credentials by Student Number', async () => {
+    //Add a second credential (2nd Credential of Keith)
+    //First credential of Keith is revoked
+    await credentialInstance.addCredential(
+      'Keith Chan',
+      'A0654321K',
+      'Law',
+      'Bachelor of Laws',
+      'Dr Lee Tiong Tsu',
+      0, // Institution ID
+      toUnixTime(2023, 3, 21), // Issuance date
+      0, // Expiry date
+      accounts[8], // Student B,
+      { from: accounts[1], value: oneEth.dividedBy(100) },
+    );
+
+    let studentCredentials = await credentialInstance.viewAllCredentialsOfStudentByStudentNumber('A0654321K', { from: accounts[1] });
+
+    await assert.strictEqual(
+      studentCredentials,
+      `Credential for student Keith Chan has been revoked\nID: 4\nStudent Name: Keith Chan\nStudent Number: A0654321K\nCourse Name: Law\nDegree Level: Bachelor of Laws\nEndorser Name: Dr Lee Tiong Tsu\nIssuance Date: 1679356800\nExpiry Date: 0\nState: ACTIVE\nIssuer: ${accounts[1]}\nOwner: ${accounts[8]}\n`,
+      'Student credential info is not correct',
+    );
+  });
+
+  it('View All Credentials', async () => {
+    let allStudentCredentials = await credentialInstance.viewAllCredentials({ from: accounts[1] });
+
+    //Observe that:
+    //Id 0 (Lyn Tan) is not shown since credential was deleted, Id 1 (Keith Chan) credential was revoked
+    //Id 2 and 3 for Remus's credentials, Id 4 for Keith credential shows up
+
+    await assert.strictEqual(
+      allStudentCredentials,
+      `Credential for student Keith Chan has been revoked\nID: 2\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Computer Science\nDegree Level: Bachelor of Computing\nEndorser Name: Dr Tan Keng Soon\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\nIssuer: ${accounts[1]}\nOwner: ${accounts[9]}\nID: 3\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Business Analytics\nDegree Level: Bachelor of Business Administration\nEndorser Name: Dr Bock See\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\nIssuer: ${accounts[1]}\nOwner: ${accounts[9]}\nID: 4\nStudent Name: Keith Chan\nStudent Number: A0654321K\nCourse Name: Law\nDegree Level: Bachelor of Laws\nEndorser Name: Dr Lee Tiong Tsu\nIssuance Date: 1679356800\nExpiry Date: 0\nState: ACTIVE\nIssuer: ${accounts[1]}\nOwner: ${accounts[8]}\n`,
+      'Student credential info is not correct',
+    );
+  });
 });
