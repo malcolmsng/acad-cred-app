@@ -29,21 +29,18 @@ contract Credential {
     uint256 credId,
     address issuer,
     string issuerName,
-    address owner,
     string studentName,
     string courseName
   );
   event delete_credential(
     address issuer,
     string issuerName,
-    address owner,
     string studentName,
     string courseName
   );
   event revoke_credential(
     address issuer,
     string issuerName,
-    address owner,
     string studentName,
     string courseName
   );
@@ -101,7 +98,6 @@ contract Credential {
       @param institutionId The id of the institution
       @param issuanceDate The date the credential was issued
       @param expiryDate The date the credential expires (optional, 0 if null)
-      @param student The address of the student owner of the credential
       @return credId The id of the credential that was added
      */
   function addCredential(
@@ -112,8 +108,7 @@ contract Credential {
     string memory endorserName,
     uint256 institutionId,
     uint issuanceDate,
-    uint expiryDate, // optional, 0 if null
-    address student
+    uint expiryDate // optional, 0 if null
   )
     public
     payable
@@ -132,7 +127,6 @@ contract Credential {
       issuanceDate <= block.timestamp,
       "Issuance date cannot be a future date. Please enter an issuance date that is today or in the past."
     );
-    require(student != address(0), "Student address cannot be empty");
 
     // New credential object
     credential memory newCredential = credential(
@@ -145,8 +139,7 @@ contract Credential {
       issuanceDate,
       expiryDate,
       credentialState.ACTIVE,
-      msg.sender, // Issuer (institution)
-      student
+      msg.sender // Issuer (institution)
     );
 
     uint256 newCredentialId = numCredentials++;
@@ -156,7 +149,6 @@ contract Credential {
       newCredentialId,
       msg.sender,
       newCredential.issuerName,
-      newCredential.owner,
       newCredential.studentName,
       newCredential.courseName
     );
@@ -185,7 +177,6 @@ contract Credential {
     emit delete_credential(
       msg.sender,
       credentials[credId].issuerName,
-      credentials[credId].owner,
       credentials[credId].studentName,
       credentials[credId].courseName
     );
@@ -212,7 +203,6 @@ contract Credential {
     emit revoke_credential(
       msg.sender,
       credentials[credId].issuerName,
-      credentials[credId].owner,
       credentials[credId].studentName,
       credentials[credId].courseName
     );
@@ -297,9 +287,6 @@ contract Credential {
           "\n",
           "Issuer: ",
           addressToString(c.issuer),
-          "\n",
-          "Owner: ",
-          addressToString(c.owner),
           "\n"
         )
       );
@@ -449,12 +436,6 @@ contract Credential {
     uint256 credId
   ) public view validCredentialId(credId) returns (address) {
     return credentials[credId].issuer;
-  }
-
-  function getCredentialOwner(
-    uint256 credId
-  ) public view validCredentialId(credId) returns (address) {
-    return credentials[credId].owner;
   }
 
   //helper method to convert uint256 into string
