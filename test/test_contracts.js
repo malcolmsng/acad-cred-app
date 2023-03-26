@@ -533,4 +533,5 @@ contract('Unit Test', function (accounts) {
       'Student credential info is not correct',
     );
   });
+  
 });
