@@ -1,4 +1,5 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 contract AcceptanceVoting {
   enum VotingState {
@@ -44,7 +45,7 @@ contract AcceptanceVoting {
   // application fee in wei
   uint256 applicationFee;
   //Size of commitee
-  //uint32 committeeSize;
+  uint32 committeeSize;
 
   //Address of committee chariman
   address committeeChairman;
@@ -60,7 +61,7 @@ contract AcceptanceVoting {
   event new_chairman(address newChairman);
   event new_committee_member(address newCommitteeMember);
   event remove_committee_member(address committeeMember);
-  //event new_committee_size(uint256 size);
+  event new_committee_size(uint256 size);
   event voted(
     address committeeMember,
     uint256 applicantNumber,
@@ -77,11 +78,11 @@ contract AcceptanceVoting {
 
   // should the person who deploys the contract be the chairman?
   // or should we allocate the chairman
-  constructor(uint256 fee, uint256 voteDuration) public {
+  constructor(uint256 fee, uint256 voteDuration) {
     committeeChairman = msg.sender;
     applicationFee = fee;
     votingTimeframe = voteDuration;
-    //addCommitteeMember(msg.sender);
+    addCommitteeMember(msg.sender);
   }
 
   modifier isChairman() {
@@ -96,7 +97,7 @@ contract AcceptanceVoting {
     uint256 institutionID,
     address institutionAddress,
     string calldata institutionName
-  ) external {
+  ) public {
     applicantAddress[institutionID] = institutionAddress;
     applicantName[institutionID] = institutionName;
     applicantVoteScore[institutionID] = 0;
@@ -105,17 +106,15 @@ contract AcceptanceVoting {
 
   function getApplicantName(
     uint256 applicantNumber
-  ) external view returns (string memory) {
+  ) public view returns (string memory) {
     return applicantName[applicantNumber];
   }
 
-  function checkApproved(uint256 applicantNumber) external view returns (bool) {
+  function checkApproved(uint256 applicantNumber) public view returns (bool) {
     return isApproved[applicantNumber];
   }
 
-  function checkConcluded(
-    uint256 applicantNumber
-  ) external view returns (bool) {
+  function checkConcluded(uint256 applicantNumber) public view returns (bool) {
     return isConcluded[applicantNumber];
   }
 
@@ -126,7 +125,7 @@ contract AcceptanceVoting {
     bool hasResearch,
     bool hasAwards,
     bool hasStudentMarketing
-  ) external {
+  ) public {
     require(isCommitteeMember[msg.sender], "You are not a committee member");
     require(
       applicantVotingState[applicantNumber] == VotingState.OPEN,
@@ -165,6 +164,7 @@ contract AcceptanceVoting {
   }
 
   function openVote(uint256 applicantNumber) external isChairman {
+
     require(
       applicantVotingState[applicantNumber] == VotingState.CLOSED,
       "Applicant already undergoing voting"
@@ -184,7 +184,7 @@ contract AcceptanceVoting {
   function closeVote(
     uint256 applicantNumber,
     uint256 scoreNeeded
-  ) external isChairman {
+  ) public isChairman {
     require(
       currentState[applicantNumber] == VotingState.OPEN,
       "Vote is not open"
@@ -239,8 +239,9 @@ contract AcceptanceVoting {
     }
   }
 
+
   // getters
-  function getCommitteeChairman() external view returns (address) {
+  function getCommitteeChairman() public view returns (address) {
     return committeeChairman;
   }
 
@@ -249,6 +250,7 @@ contract AcceptanceVoting {
   }
 
   function getvotingTimeframe() external view returns (uint256) {
+
     return votingTimeframe;
   }
 
@@ -256,7 +258,7 @@ contract AcceptanceVoting {
   // i.e. VotingState.OPEN == 0
   function getVotingState(
     uint256 applicantNumber
-  ) external view returns (VotingState) {
+  ) public view returns (VotingState) {
     return currentState[applicantNumber];
   }
 
@@ -280,12 +282,11 @@ contract AcceptanceVoting {
     applicationFee = fee;
   }
 
-  /*
   function changeCommitteeSize(uint32 size) public isChairman {
     committeeSize = size;
     emit new_committee_size(size);
   }
-  */
+
   function removeCommitteeMember(address user) public isChairman {
     require(isCommitteeMember[user], "User is not a current committee Member");
     require(committeeMembers.length > 0, "Committee is empty");
@@ -305,6 +306,10 @@ contract AcceptanceVoting {
   }
 
   function addCommitteeMember(address user) public isChairman {
+    require(
+      committeeMembers.length < committeeSize,
+      "Committee max size reached"
+    );
     require(
       isCommitteeMember[user] != true,
       "User is already a current committee Member"
