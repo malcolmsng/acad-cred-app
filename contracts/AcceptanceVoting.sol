@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.5.0;
 
 contract AcceptanceVoting {
   enum VotingState {
@@ -78,7 +78,7 @@ contract AcceptanceVoting {
 
   // should the person who deploys the contract be the chairman?
   // or should we allocate the chairman
-  constructor(uint256 fee, uint256 voteDuration) {
+  constructor(uint256 fee, uint256 voteDuration) public {
     committeeChairman = msg.sender;
     applicationFee = fee;
     votingTimeframe = voteDuration;
@@ -97,7 +97,7 @@ contract AcceptanceVoting {
     uint256 institutionID,
     address institutionAddress,
     string calldata institutionName
-  ) public {
+  ) external {
     applicantAddress[institutionID] = institutionAddress;
     applicantName[institutionID] = institutionName;
     applicantVoteScore[institutionID] = 0;
@@ -164,7 +164,6 @@ contract AcceptanceVoting {
   }
 
   function openVote(uint256 applicantNumber) external isChairman {
-
     require(
       applicantVotingState[applicantNumber] == VotingState.CLOSED,
       "Applicant already undergoing voting"
@@ -239,7 +238,6 @@ contract AcceptanceVoting {
     }
   }
 
-
   // getters
   function getCommitteeChairman() public view returns (address) {
     return committeeChairman;
@@ -250,7 +248,6 @@ contract AcceptanceVoting {
   }
 
   function getvotingTimeframe() external view returns (uint256) {
-
     return votingTimeframe;
   }
 
