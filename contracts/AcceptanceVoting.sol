@@ -232,11 +232,10 @@ contract AcceptanceVoting {
         membersVoted.push(committeeMembers[i]);
       }
     }
-    // CANNOT TRANSFER ASNDHASDASIDHH
     uint256 val = applicationFee / membersVoted.length;
     for (uint256 j = 0; j < membersVoted.length; j++) {
       address payable recipient = address(uint160(membersVoted[j]));
-      recipient.transfer(val);
+      // recipient.transfer(val);
     }
   }
 
