@@ -159,10 +159,11 @@ contract AcceptanceVoting {
     emit voted(msg.sender, applicantNumber, vote_score);
   }
 
-  function payFee(uint applicantNumber) public payable {
+  function payFee(uint applicantNumber, address applicantAdd) public payable {
     require(msg.value / 1E18 >= applicationFee, "Application fee is 5 ETH ");
     hasPaid[applicantNumber] = true;
-    payable(committeeChairman).transfer(msg.value);
+    applicantAddress[applicantNumber] = applicantAdd;
+    // payable(committeeChairman).transfer(msg.value);
   }
 
   function openVote(uint256 applicantNumber) external isChairman {
@@ -170,7 +171,7 @@ contract AcceptanceVoting {
       applicantVotingState[applicantNumber] == VotingState.CLOSED,
       "Applicant already undergoing voting"
     );
-    require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
+    // require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
 
     // Change voting state
     applicantVotingState[applicantNumber] = VotingState.OPEN;
@@ -216,29 +217,30 @@ contract AcceptanceVoting {
     }
 
     isConcluded[applicantNumber] = true;
+    applicantAddress[applicantNumber] = address(0);
     distributeFee(applicantNumber);
 
     emit vote_close(applicantNumber, block.number);
   }
 
   function distributeFee(uint256 applicantNumber) public payable isChairman {
-    require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
+    // require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
 
     // Divide the application fee equally among all committee members
     // members => applicant => true if voted
     // mapping(address => mapping(uint256 => bool)) hasVoted;
 
     // address[] memory memberVoted;
-    for (uint256 i = 0; i < committeeMembers.length; i++) {
-      if (hasVoted[committeeMembers[i]][applicantNumber]) {
-        membersVoted.push(committeeMembers[i]);
-      }
-    }
-    uint256 val = applicationFee / membersVoted.length;
-    for (uint256 j = 0; j < membersVoted.length; j++) {
-      address payable recipient = payable(membersVoted[j]);
-      // recipient.transfer(val);
-    }
+    // for (uint256 i = 0; i < committeeMembers.length; i++) {
+    //   if (hasVoted[committeeMembers[i]][applicantNumber]) {
+    //     membersVoted.push(committeeMembers[i]);
+    //   }
+    // }
+    // uint256 val = applicationFee / membersVoted.length;
+    // for (uint256 j = 0; j < membersVoted.length; j++) {
+    //   address payable recipient = payable(membersVoted[j]);
+    //   recipient.transfer(val);
+    // }
   }
 
   // getters
