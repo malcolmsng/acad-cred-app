@@ -47,13 +47,10 @@ contract Institution {
     @dev Require contract owner only
    */
   modifier ownerOnly() {
-    _;
-  }
-
-  /**
-    @dev Require that the institution has been voted on
-   */
-  modifier votedOnly() {
+    require(
+      msg.sender == _owner,
+      "Only the contract owner can call this function"
+    );
     _;
   }
 
@@ -78,6 +75,7 @@ contract Institution {
     string memory institutionLatitude,
     string memory institutionLongitude
   ) public returns (uint256 instId) {
+
     require(
       bytes(institutionName).length > 0,
       "Institution name cannot be empty"
@@ -159,7 +157,7 @@ contract Institution {
     @dev Update an institution status
     @param instId The id of the institution to approve
    */
-  function updateInstitutionStatus(uint256 instId) public votedOnly {
+  function updateInstitutionStatus(uint256 instId) public ownerOnly {
     bool approvalResult = acceptanceVotingContract.checkApproved(instId);
     bool votingConcluded = acceptanceVotingContract.checkConcluded(instId);
 

@@ -45,11 +45,11 @@ contract AcceptanceVoting {
   // application fee in wei
   uint256 applicationFee;
   //Size of commitee
-  //uint32 committeeSize;
+  uint32 committeeSize;
 
   //Address of committee chariman
   address committeeChairman;
-  // should we set a deadline to vote e.g. 1 week
+
   // Deadline in terms of blocks (1 eth block roughly 12.13 minutes)
   // applicant => vote deadline for committee to vote for that applicant
   uint256 votingTimeframe;
@@ -59,9 +59,10 @@ contract AcceptanceVoting {
 
   //Events
   event new_chairman(address newChairman);
-  event new_committee_member(address newCommitteeMember);
-  event remove_committee_member(address committeeMember);
-  //event new_committee_size(uint256 size);
+  event new_committee_member(address newCommitteeMember, uint256 committeeSize);
+  event remove_committee_member(address committeeMember, uint256 committeeSize);
+  event new_committee_size(uint256 size);
+  event applicant_paid(uint256 applicantNumber);
   event voted(
     address committeeMember,
     uint256 applicantNumber,
@@ -87,11 +88,14 @@ contract AcceptanceVoting {
 
   // should the person who deploys the contract be the chairman?
   // or should we allocate the chairman
+  // committee max size 10 to begin with
+
   constructor(uint256 fee, uint256 voteDuration) {
     committeeChairman = msg.sender;
+    committeeSize = 10;
     applicationFee = fee;
     votingTimeframe = voteDuration;
-    //addCommitteeMember(msg.sender);
+    addCommitteeMember(msg.sender);
   }
 
   modifier isChairman() {
@@ -103,29 +107,27 @@ contract AcceptanceVoting {
   }
 
   function addApplicant(
-    uint256 institutionID,
-    address institutionAddress,
-    string calldata institutionName
+    uint256 applicantNumber,
+    address _applicantAddress,
+    string calldata _applicantName
   ) external {
-    applicantAddress[institutionID] = institutionAddress;
-    applicantName[institutionID] = institutionName;
-    applicantVoteScore[institutionID] = 0;
-    applicantVotingState[institutionID] = VotingState.CLOSED;
+    applicantAddress[applicantNumber] = _applicantAddress;
+    applicantName[applicantNumber] = _applicantName;
+    applicantVoteScore[applicantNumber] = 0;
+    applicantVotingState[applicantNumber] = VotingState.CLOSED;
   }
 
   function getApplicantName(
     uint256 applicantNumber
-  ) external view returns (string memory) {
+  ) public view returns (string memory) {
     return applicantName[applicantNumber];
   }
 
-  function checkApproved(uint256 applicantNumber) external view returns (bool) {
+  function checkApproved(uint256 applicantNumber) public view returns (bool) {
     return isApproved[applicantNumber];
   }
 
-  function checkConcluded(
-    uint256 applicantNumber
-  ) external view returns (bool) {
+  function checkConcluded(uint256 applicantNumber) public view returns (bool) {
     return isConcluded[applicantNumber];
   }
 
@@ -136,7 +138,7 @@ contract AcceptanceVoting {
     bool hasResearch,
     bool hasAwards,
     bool hasStudentMarketing
-  ) external {
+  ) public {
     require(isCommitteeMember[msg.sender], "You are not a committee member");
     require(
       applicantVotingState[applicantNumber] == VotingState.OPEN,
@@ -170,6 +172,7 @@ contract AcceptanceVoting {
   }
 
   function payFee(uint applicantNumber, address applicantAdd) public payable {
+
     require(msg.value / 1E16 >= applicationFee, "Application fee is 5 ETH");
     require(hasPaid[applicantNumber] == false, "Applicant fee has been paid");
     hasPaid[applicantNumber] = true;
@@ -182,18 +185,22 @@ contract AcceptanceVoting {
 
   // temp function while payFee is under works
   function acknowledgePay(uint applicantNumber, address applicantAdd) public {
+    require(msg.value / 1E18 >= applicationFee, "Application fee is 5 ETH");
     require(hasPaid[applicantNumber] == false, "Applicant fee has been paid");
     hasPaid[applicantNumber] = true;
     applicantVotingState[applicantNumber] = VotingState.CLOSED;
     applicantAddress[applicantNumber] = applicantAdd;
     emit applicant_paid(applicantNumber);
+    // payable(committeeChairman).transfer(msg.value);
+
   }
 
   function openVote(uint256 applicantNumber) external isChairman {
     require(
       applicantVotingState[applicantNumber] == VotingState.CLOSED,
-      "applicant already undergoing voting"
+      "Applicant already undergoing voting"
     );
+    // require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
 
     // Change voting state
     applicantVotingState[applicantNumber] = VotingState.OPEN;
@@ -208,7 +215,7 @@ contract AcceptanceVoting {
   function closeVote(
     uint256 applicantNumber,
     uint256 scoreNeeded
-  ) external isChairman {
+  ) public isChairman {
     require(
       applicantVotingState[applicantNumber] == VotingState.OPEN,
       "Vote is not open"
@@ -219,6 +226,7 @@ contract AcceptanceVoting {
     );
 
     // Calculate votes here
+
     if (applicantVoteScore[applicantNumber] >= scoreNeeded) {
       isApproved[applicantNumber] = true;
       emit vote_results_accepted(
@@ -230,7 +238,9 @@ contract AcceptanceVoting {
       //addCommitteeMember(applicantAddress[applicantNumber]); ///figure out why not working
     } else if (applicantVoteScore[applicantNumber] < scoreNeeded) {
       isApproved[applicantNumber] = false;
+
       emit vote_results_rejected(
+
         "Not accepted",
         applicantNumber,
         applicantVoteScore[applicantNumber],
@@ -265,9 +275,13 @@ contract AcceptanceVoting {
   }
 
   // getters
-  function getCommitteeChairman() external view returns (address) {
+  function getCommitteeChairman() public view returns (address) {
     return committeeChairman;
   }
+
+  // function getChairmanBalance() external view returns (uint256) {
+  //   return address(this).balance;
+  // }
 
   function getvotingTimeframe() external view returns (uint256) {
     return votingTimeframe;
@@ -277,7 +291,8 @@ contract AcceptanceVoting {
   // i.e. VotingState.OPEN == 0
   function getVotingState(
     uint256 applicantNumber
-  ) external view returns (VotingState) {
+
+  ) public view returns (VotingState) {
     return applicantVotingState[applicantNumber];
   }
 
@@ -293,6 +308,10 @@ contract AcceptanceVoting {
     return committeeMembers;
   }
 
+  function getAmountOfCommitteeMembers() public view returns (uint256) {
+    return committeeMembers.length;
+  }
+
   function changeDeadline(uint256 votingDuration) public isChairman {
     votingTimeframe = votingDuration;
   }
@@ -301,12 +320,11 @@ contract AcceptanceVoting {
     applicationFee = fee;
   }
 
-  /*
   function changeCommitteeSize(uint32 size) public isChairman {
     committeeSize = size;
     emit new_committee_size(size);
   }
-  */
+
   function removeCommitteeMember(address user) public isChairman {
     require(isCommitteeMember[user], "User is not a current committee Member");
     require(committeeMembers.length > 0, "Committee is empty");
@@ -322,17 +340,21 @@ contract AcceptanceVoting {
       }
     }
 
-    emit remove_committee_member(user);
+    emit remove_committee_member(user, committeeMembers.length);
   }
 
   function addCommitteeMember(address user) public isChairman {
+    require(
+      committeeMembers.length < committeeSize,
+      "Committee max size reached"
+    );
     require(
       isCommitteeMember[user] != true,
       "User is already a current committee Member"
     );
     committeeMembers.push(user);
     isCommitteeMember[user] = true;
-    emit new_committee_member(user);
+    emit new_committee_member(user, committeeMembers.length);
   }
 
   function changeChairman(address user) public isChairman {
