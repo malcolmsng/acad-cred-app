@@ -223,7 +223,7 @@ contract AcceptanceVoting {
 
   function distributeFee(uint256 applicantNumber) public payable isChairman {
     require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
-    
+
     // Divide the application fee equally among all committee members
     // members => applicant => true if voted
     // mapping(address => mapping(uint256 => bool)) hasVoted;
