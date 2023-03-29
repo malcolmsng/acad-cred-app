@@ -78,8 +78,10 @@ contract AcceptanceVoting {
 
   // should the person who deploys the contract be the chairman?
   // or should we allocate the chairman
-  constructor(uint256 fee, uint256 voteDuration) {
+  // committee max size 10 to begin with
+  constructor(uint256 fee, uint256 voteDuration) public {
     committeeChairman = msg.sender;
+    committeeSize = 10;
     applicationFee = fee;
     votingTimeframe = voteDuration;
     addCommitteeMember(msg.sender);
@@ -160,7 +162,7 @@ contract AcceptanceVoting {
   function payFee(uint applicantNumber) public payable {
     require(msg.value / 1E18 >= applicationFee, "Application fee is 5 ETH ");
     hasPaid[applicantNumber] = true;
-    // address(uint160(address(this))).transfer(msg.value);
+    payable(committeeChairman).transfer(msg.value);
   }
 
   function openVote(uint256 applicantNumber) external isChairman {
@@ -219,8 +221,9 @@ contract AcceptanceVoting {
     emit vote_close(applicantNumber, block.number);
   }
 
-  function distributeFee(uint256 applicantNumber) public payable {
+  function distributeFee(uint256 applicantNumber) public payable isChairman {
     require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
+
     // Divide the application fee equally among all committee members
     // members => applicant => true if voted
     // mapping(address => mapping(uint256 => bool)) hasVoted;
@@ -233,7 +236,7 @@ contract AcceptanceVoting {
     }
     uint256 val = applicationFee / membersVoted.length;
     for (uint256 j = 0; j < membersVoted.length; j++) {
-      address payable recipient = address(uint160(membersVoted[j]));
+      address payable recipient = payable(membersVoted[j]);
       // recipient.transfer(val);
     }
   }
@@ -243,9 +246,9 @@ contract AcceptanceVoting {
     return committeeChairman;
   }
 
-  function getContractBalance() external view returns (uint256) {
-    return address(this).balance;
-  }
+  // function getChairmanBalance() external view returns (uint256) {
+  //   return address(this).balance;
+  // }
 
   function getvotingTimeframe() external view returns (uint256) {
     return votingTimeframe;
