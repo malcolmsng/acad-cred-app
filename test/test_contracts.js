@@ -34,7 +34,7 @@ contract('Unit Test', function (accounts) {
       'Singapore',
       '1.290270',
       '103.851959',
-      { from: accounts[1] },
+      { from: accounts[0] },
     );
     await assert.notStrictEqual(makeI1, undefined, 'Failed to add institution');
     truffleAssert.eventEmitted(makeI1, 'add_institution');
@@ -49,7 +49,7 @@ contract('Unit Test', function (accounts) {
         'Singapore',
         '1.290270',
         '103.851959',
-        { from: accounts[1] },
+        { from: accounts[0] },
       ),
       'Institution name cannot be empty',
     );
@@ -62,7 +62,7 @@ contract('Unit Test', function (accounts) {
         'Singapore',
         '1.290270',
         '103.851959',
-        { from: accounts[1] },
+        { from: accounts[0] },
       ),
       'Institution country cannot be empty',
     );
@@ -75,7 +75,7 @@ contract('Unit Test', function (accounts) {
         '', // Empty institution city
         '1.290270',
         '103.851959',
-        { from: accounts[1] },
+        { from: accounts[0] },
       ),
       'Institution city cannot be empty',
     );
@@ -88,7 +88,7 @@ contract('Unit Test', function (accounts) {
         'Singapore',
         '', // Empty institution latitude
         '103.851959',
-        { from: accounts[1] },
+        { from: accounts[0] },
       ),
       'Institution latitude cannot be empty',
     );
@@ -101,18 +101,18 @@ contract('Unit Test', function (accounts) {
         'Singapore',
         '1.290270',
         '', // Empty institution longitude
-        { from: accounts[1] },
+        { from: accounts[0] },
       ),
       'Institution longitude cannot be empty',
     );
   });
 
   it('Delete Institution', async () => {
-    let deleteI1 = await institutionInstance.deleteInstitution(0, { from: accounts[1] });
+    let deleteI1 = await institutionInstance.deleteInstitution(0, { from: accounts[0] });
     truffleAssert.eventEmitted(deleteI1, 'delete_institution');
 
     await truffleAssert.reverts(
-      institutionInstance.deleteInstitution(0, { from: accounts[1] }),
+      institutionInstance.deleteInstitution(0, { from: accounts[0] }),
       'Institution has already been deleted from the system.',
     );
   });
@@ -123,73 +123,88 @@ contract('Unit Test', function (accounts) {
 
   it('Add member', async () => {
     // Add member
-    let makeM1 = await acceptanceVotingInstance.addCommitteeMember(accounts[6]);
+    let makeM1 = await acceptanceVotingInstance.addCommitteeMember(accounts[1]);
     truffleAssert.eventEmitted(makeM1, 'new_committee_member');
 
-    let makeM2 = await acceptanceVotingInstance.addCommitteeMember(accounts[7]);
+    let makeM2 = await acceptanceVotingInstance.addCommitteeMember(accounts[2]);
     truffleAssert.eventEmitted(makeM2, 'new_committee_member');
 
-    let makeM3 = await acceptanceVotingInstance.addCommitteeMember(accounts[8]);
+    let makeM3 = await acceptanceVotingInstance.addCommitteeMember(accounts[3]);
     truffleAssert.eventEmitted(makeM3, 'new_committee_member');
+
+    cMembers = await acceptanceVotingInstance.getAmountOfCommitteeMembers();
+    await assert.strictEqual(cMembers.toNumber(), 4, 'Add Committee Member does not work');
   });
 
   it('Incorrect add member', async () => {
     // User cannot add member if user is not a chairman
     await truffleAssert.reverts(
-      acceptanceVotingInstance.addCommitteeMember(accounts[9], { from: accounts[1] }),
+      acceptanceVotingInstance.addCommitteeMember(accounts[3], { from: accounts[1] }),
       'Only Chairman can call this function',
     );
 
     // Current members cannot be added again
-    await truffleAssert.reverts(acceptanceVotingInstance.addCommitteeMember(accounts[6]), 'User is already a current committee Member');
+    await truffleAssert.reverts(acceptanceVotingInstance.addCommitteeMember(accounts[3]), 'User is already a current committee Member');
   });
 
   it('Remove member', async () => {
     // Add member
-    let makeM3 = await acceptanceVotingInstance.removeCommitteeMember(accounts[8]);
+    let makeM3 = await acceptanceVotingInstance.removeCommitteeMember(accounts[3]);
     truffleAssert.eventEmitted(makeM3, 'remove_committee_member');
   });
 
   it('Incorrect remove member', async () => {
     // User cannot remove member if user is not a chairman
     await truffleAssert.reverts(
-      acceptanceVotingInstance.removeCommitteeMember(accounts[7], { from: accounts[1] }),
+      acceptanceVotingInstance.removeCommitteeMember(accounts[3], { from: accounts[1] }),
       'Only Chairman can call this function',
     );
 
-    // Current members cannot be added again
-    await truffleAssert.reverts(acceptanceVotingInstance.removeCommitteeMember(accounts[8]), 'User is not a current committee Member');
+    // non-members cannot be removed again
+    await truffleAssert.reverts(acceptanceVotingInstance.removeCommitteeMember(accounts[5]), 'User is not a current committee Member');
   });
 
-  it('Pay fee', async () => {
-    // User cannot remove member if user is not a chairman
-    let balance1 = await acceptanceVotingInstance.getContractBalance();
-    await acceptanceVotingInstance.payFee(6, { from: accounts[6], value: 6e18 });
-    let balance2 = await acceptanceVotingInstance.getContractBalance();
-    await assert.notStrictEqual(balance1, balance2, 'Pay fee does not work');
+  it('Applicant pays fee to begin acceptance process', async () => {
+    let before_balance = new BigNumber(await web3.eth.getBalance(acceptanceVotingInstance.address)) / oneEth;
+    // Attempt to pay less than 5 eth
+    await truffleAssert.reverts(
+      acceptanceVotingInstance.payFee(0, accounts[10], { from: accounts[10], value: oneEth }),
+      'Application fee is 5 ETH',
+    );
+    // Attempt to pay 5 eth
+    let app_paid = await acceptanceVotingInstance.payFee(0, accounts[10], { from: accounts[10], value: oneEth.multipliedBy(5) });
+    truffleAssert.eventEmitted(app_paid, 'applicant_paid');
+    // Attempt to pay again
+    await truffleAssert.reverts(
+      acceptanceVotingInstance.payFee(0, accounts[10], { from: accounts[10], value: oneEth.multipliedBy(5) }),
+      'Applicant fee has been paid',
+    );
+    let after_balance = new BigNumber(await web3.eth.getBalance(acceptanceVotingInstance.address)) / oneEth;
+    let diff = after_balance - before_balance;
+    await assert.strictEqual(diff, 5, 'Pay fee does not work');
   });
 
   it('Cannot vote when vote has not opened', async () => {
     // User cannot remove member if user is not a chairman
     await truffleAssert.reverts(
-      acceptanceVotingInstance.vote(0, true, true, true, false, false, { from: accounts[6] }),
+      acceptanceVotingInstance.vote(0, true, true, true, false, false, { from: accounts[1] }),
       'Applicant is not open for voting',
     );
   });
 
   it('Open vote', async () => {
     // Open vote
-    let pay1 = await acceptanceVotingInstance.payFee(0, { from: accounts[5], value: 5e18 });
+    // let pay1 = await acceptanceVotingInstance.payFee(1, { from: accounts[1], value: 5e18 });
     let makeO1 = await acceptanceVotingInstance.openVote(0);
     truffleAssert.eventEmitted(makeO1, 'vote_open');
   });
 
   it('Vote', async () => {
     // Open vote
-    let makeV1 = await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[6] });
+    let makeV1 = await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[1] });
     truffleAssert.eventEmitted(makeV1, 'voted');
 
-    let makeV2 = await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[7] });
+    let makeV2 = await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[2] });
     truffleAssert.eventEmitted(makeV2, 'voted');
   });
 
@@ -205,39 +220,42 @@ contract('Unit Test', function (accounts) {
     truffleAssert.eventEmitted(makeC1, 'vote_close');
   });
 
-  it('Check approved status', async () => {
-    // Open vote
-    await institutionInstance.updateInstitutionStatus(0);
-    let makeS1 = await institutionInstance.getInstitutionState(0);
-    await assert.equal(makeS1, 0, 'Failed to approve institution');
-  });
-
   it('Check pending status', async () => {
     // Open vote
-    await institutionInstance.addInstitution('National University of Singaporea', 'Singapore', 'Singapore', '1.1', '101.1', {
-      from: accounts[2],
+    let instID = await institutionInstance.addInstitution('National University of Singaporea', 'Singapore', 'Singapore', '1.1', '101.1', {
+      from: accounts[0],
     });
     let makeS2 = await institutionInstance.getInstitutionState(1);
-    await assert.equal(makeS2, 1, 'Institution status not pending');
+    assert.equal(makeS2.toString(), '1', 'Institution status not pending');
+  });
+
+  it('Check approved status', async () => {
+    // Open vote
+    let app_paid = await acceptanceVotingInstance.payFee(1, accounts[10], { from: accounts[10], value: oneEth.multipliedBy(5) });
+    await acceptanceVotingInstance.openVote(1);
+    await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[1] });
+    await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[2] });
+    await acceptanceVotingInstance.closeVote(1, 9);
+    await institutionInstance.updateInstitutionStatus(1);
+    let makeS1 = await institutionInstance.getInstitutionState(1);
+    await assert.equal(makeS1.toString(), '0', 'Failed to approve institution');
   });
 
   it('Check rejected status', async () => {
     // Open vote
-    let pay1 = await acceptanceVotingInstance.payFee(1, { from: accounts[5], value: 5e18 });
-    await acceptanceVotingInstance.openVote(1);
-    await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[6] });
-    await acceptanceVotingInstance.vote(1, false, false, true, true, false, { from: accounts[7] });
-    await acceptanceVotingInstance.closeVote(1, 9);
-    await institutionInstance.updateInstitutionStatus(1);
-    let makeS3 = await institutionInstance.getInstitutionState(1);
-    await assert.equal(makeS3, 2, 'Failed to reject institution');
+    await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[1] });
+    await acceptanceVotingInstance.vote(0, false, false, true, true, false, { from: accounts[2] });
+    await acceptanceVotingInstance.closeVote(0, 9);
+    await institutionInstance.updateInstitutionStatus(0);
+    let makeS3 = await institutionInstance.getInstitutionState(0);
+    assert.strictEqual(makeS3.toString(), '2', 'Failed to reject institution');
   });
 
   it('Check distribute fee', async () => {
     // await acceptanceVotingInstance.closeVote(2,0)
-    await acceptanceVotingInstance.addApplicant(2, zeroAddress, "SIT")
-    await acceptanceVotingInstance.payFee(2, {from: accounts[5], value: 5e18})
-    await acceptanceVotingInstance.openVote(2)
+    await acceptanceVotingInstance.addApplicant(2, zeroAddress, 'SIT');
+    await acceptanceVotingInstance.payFee(2, { from: accounts[5], value: 5e18 });
+    await acceptanceVotingInstance.openVote(2);
     await acceptanceVotingInstance.vote(2, true, true, true, true, true, { from: accounts[6] });
     await acceptanceVotingInstance.vote(2, true, true, true, true, true, { from: accounts[7] });
     let balance1 = await web3.eth.getBalance(accounts[6]);
@@ -246,7 +264,7 @@ contract('Unit Test', function (accounts) {
     await assert.notStrictEqual(balance1, balance2, 'Failed to distribute fee');
   });
 
-  //////////
+  ////////
 
   console.log('Testing Credential contract');
 
