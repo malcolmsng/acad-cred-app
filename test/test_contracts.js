@@ -213,13 +213,6 @@ contract('Unit Test', function (accounts) {
     await truffleAssert.reverts(acceptanceVotingInstance.closeVote(0, 9), 'Deadline not up');
   });
 
-  it('Close vote', async () => {
-    // Open vote
-    await acceptanceVotingInstance.changeDeadline(0);
-    let makeC1 = await acceptanceVotingInstance.closeVote(0, 9);
-    truffleAssert.eventEmitted(makeC1, 'vote_close');
-  });
-
   it('Check pending status', async () => {
     // Open vote
     let instID = await institutionInstance.addInstitution('National University of Singaporea', 'Singapore', 'Singapore', '1.1', '101.1', {
@@ -229,16 +222,26 @@ contract('Unit Test', function (accounts) {
     assert.equal(makeS2.toString(), '1', 'Institution status not pending');
   });
 
-  it('Check approved status', async () => {
+  it('Check approved status and vote close function and distribute fee function', async () => {
     // Open vote
-    let app_paid = await acceptanceVotingInstance.payFee(1, accounts[10], { from: accounts[10], value: oneEth.multipliedBy(5) });
+    let balance1_init = new BigNumber(await web3.eth.getBalance(accounts[1])) / oneEth;
+    let balance2_init = new BigNumber(await web3.eth.getBalance(accounts[2])) / oneEth;
+    await acceptanceVotingInstance.changeDeadline(0);
+    await acceptanceVotingInstance.payFee(1, accounts[10], { from: accounts[10], value: oneEth.multipliedBy(5) });
+    let contract_before_balance = new BigNumber(await web3.eth.getBalance(acceptanceVotingInstance.address)) / oneEth;
     await acceptanceVotingInstance.openVote(1);
     await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[1] });
     await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[2] });
     await acceptanceVotingInstance.closeVote(1, 9);
     await institutionInstance.updateInstitutionStatus(1);
     let makeS1 = await institutionInstance.getInstitutionState(1);
-    await assert.equal(makeS1.toString(), '0', 'Failed to approve institution');
+    let balance1_final = new BigNumber(await web3.eth.getBalance(accounts[1])) / oneEth;
+    let balance2_final = new BigNumber(await web3.eth.getBalance(accounts[2])) / oneEth;
+    let contract_after_balance = new BigNumber(await web3.eth.getBalance(acceptanceVotingInstance.address)) / oneEth;
+    assert.equal(makeS1.toString(), '0', 'Failed to approve institution');
+    assert.strictEqual(contract_before_balance - contract_after_balance, 5, 'Distribute Fee not working for contract');
+    assert.strictEqual(balance1_final - balance1_init > 2.49, true, 'Distribute Fee not working for account 1');
+    assert.strictEqual(balance2_final - balance2_init > 2.49, true, 'Distribute Fee not working for account 2');
   });
 
   it('Check rejected status', async () => {
@@ -249,19 +252,6 @@ contract('Unit Test', function (accounts) {
     await institutionInstance.updateInstitutionStatus(0);
     let makeS3 = await institutionInstance.getInstitutionState(0);
     assert.strictEqual(makeS3.toString(), '2', 'Failed to reject institution');
-  });
-
-  it('Check distribute fee', async () => {
-    // await acceptanceVotingInstance.closeVote(2,0)
-    await acceptanceVotingInstance.addApplicant(2, zeroAddress, 'SIT');
-    await acceptanceVotingInstance.payFee(2, { from: accounts[5], value: 5e18 });
-    await acceptanceVotingInstance.openVote(2);
-    await acceptanceVotingInstance.vote(2, true, true, true, true, true, { from: accounts[6] });
-    await acceptanceVotingInstance.vote(2, true, true, true, true, true, { from: accounts[7] });
-    let balance1 = await web3.eth.getBalance(accounts[6]);
-    await acceptanceVotingInstance.distributeFee(2);
-    let balance2 = await web3.eth.getBalance(accounts[6]);
-    await assert.notStrictEqual(balance1, balance2, 'Failed to distribute fee');
   });
 
   ////////
