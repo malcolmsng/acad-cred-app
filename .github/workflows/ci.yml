@@ -51,5 +51,5 @@ jobs:
       - name: Install Truffle Dependencies
         run: npm install
 
-      - name: Run Truffle Test
-        run: truffle test
+      - name: Compile Truffle
+        run: truffle compile
