@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.5.0;
 
 contract AcceptanceVoting {
   enum VotingState {
@@ -37,6 +37,11 @@ contract AcceptanceVoting {
   // applicant => voting ended
   mapping(uint256 => bool) isConcluded;
 
+  // applicantId => hasPaid
+  mapping(uint256 => bool) hasPaid;
+
+  address[] membersVoted;
+
   // application fee in wei
   uint256 applicationFee;
   //Size of commitee
@@ -44,7 +49,7 @@ contract AcceptanceVoting {
 
   //Address of committee chariman
   address committeeChairman;
-  // should we set a deadline to vote e.g. 1 week
+
   // Deadline in terms of blocks (1 eth block roughly 12.13 minutes)
   // applicant => vote deadline for committee to vote for that applicant
   uint256 votingTimeframe;
@@ -73,7 +78,7 @@ contract AcceptanceVoting {
 
   // should the person who deploys the contract be the chairman?
   // or should we allocate the chairman
-  constructor(uint256 fee, uint256 voteDuration) {
+  constructor(uint256 fee, uint256 voteDuration) public {
     committeeChairman = msg.sender;
     applicationFee = fee;
     votingTimeframe = voteDuration;
@@ -92,7 +97,7 @@ contract AcceptanceVoting {
     uint256 institutionID,
     address institutionAddress,
     string calldata institutionName
-  ) public {
+  ) external {
     applicantAddress[institutionID] = institutionAddress;
     applicantName[institutionID] = institutionName;
     applicantVoteScore[institutionID] = 0;
@@ -152,11 +157,18 @@ contract AcceptanceVoting {
     emit voted(msg.sender, applicantNumber, vote_score);
   }
 
-  function openVote(uint256 applicantNumber) public isChairman {
+  function payFee(uint applicantNumber) public payable {
+    require(msg.value / 1E18 >= applicationFee, "Application fee is 5 ETH ");
+    hasPaid[applicantNumber] = true;
+    // address(uint160(address(this))).transfer(msg.value);
+  }
+
+  function openVote(uint256 applicantNumber) external isChairman {
     require(
       applicantVotingState[applicantNumber] == VotingState.CLOSED,
-      "applicant already undergoing voting"
+      "Applicant already undergoing voting"
     );
+    require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
 
     // Change voting state
     applicantVotingState[applicantNumber] = VotingState.OPEN;
@@ -182,6 +194,7 @@ contract AcceptanceVoting {
     );
 
     // Calculate votes here
+
     if (applicantVoteScore[applicantNumber] >= scoreNeeded) {
       isApproved[applicantNumber] = true;
       emit vote_results(
@@ -201,25 +214,40 @@ contract AcceptanceVoting {
     }
 
     isConcluded[applicantNumber] = true;
-    //distributeFee();
+    distributeFee(applicantNumber);
 
     emit vote_close(applicantNumber, block.number);
   }
 
-  // function distributeFee() public payable {
-  //   // Divide the application fee equally among all committee members
-  //   uint256 val = applicationFee / committeeMembers.length;
-  //   for (uint256 i = 0; i < committeeMembers.length; i++) {
-  //     sendMoney(committeeMembers[i], val);
-  //   }
-  // }
+  function distributeFee(uint256 applicantNumber) public payable {
+    require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
+    // Divide the application fee equally among all committee members
+    // members => applicant => true if voted
+    // mapping(address => mapping(uint256 => bool)) hasVoted;
+
+    // address[] memory memberVoted;
+    for (uint256 i = 0; i < committeeMembers.length; i++) {
+      if (hasVoted[committeeMembers[i]][applicantNumber]) {
+        membersVoted.push(committeeMembers[i]);
+      }
+    }
+    uint256 val = applicationFee / membersVoted.length;
+    for (uint256 j = 0; j < membersVoted.length; j++) {
+      address payable recipient = address(uint160(membersVoted[j]));
+      // recipient.transfer(val);
+    }
+  }
 
   // getters
   function getCommitteeChairman() public view returns (address) {
     return committeeChairman;
   }
 
-  function getvotingTimeframe() public view returns (uint256) {
+  function getContractBalance() external view returns (uint256) {
+    return address(this).balance;
+  }
+
+  function getvotingTimeframe() external view returns (uint256) {
     return votingTimeframe;
   }
 

@@ -161,6 +161,14 @@ contract('Unit Test', function (accounts) {
     await truffleAssert.reverts(acceptanceVotingInstance.removeCommitteeMember(accounts[8]), 'User is not a current committee Member');
   });
 
+  it('Pay fee', async () => {
+    // User cannot remove member if user is not a chairman
+    let balance1 = await acceptanceVotingInstance.getContractBalance();
+    await acceptanceVotingInstance.payFee(6, { from: accounts[6], value: 6e18 });
+    let balance2 = await acceptanceVotingInstance.getContractBalance();
+    await assert.notStrictEqual(balance1, balance2, 'Pay fee does not work');
+  });
+
   it('Cannot vote when vote has not opened', async () => {
     // User cannot remove member if user is not a chairman
     await truffleAssert.reverts(
@@ -171,6 +179,7 @@ contract('Unit Test', function (accounts) {
 
   it('Open vote', async () => {
     // Open vote
+    let pay1 = await acceptanceVotingInstance.payFee(0, { from: accounts[5], value: 5e18 });
     let makeO1 = await acceptanceVotingInstance.openVote(0);
     truffleAssert.eventEmitted(makeO1, 'vote_open');
   });
@@ -214,6 +223,7 @@ contract('Unit Test', function (accounts) {
 
   it('Check rejected status', async () => {
     // Open vote
+    let pay1 = await acceptanceVotingInstance.payFee(1, { from: accounts[5], value: 5e18 });
     await acceptanceVotingInstance.openVote(1);
     await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[6] });
     await acceptanceVotingInstance.vote(1, false, false, true, true, false, { from: accounts[7] });
@@ -221,6 +231,19 @@ contract('Unit Test', function (accounts) {
     await institutionInstance.updateInstitutionStatus(1);
     let makeS3 = await institutionInstance.getInstitutionState(1);
     await assert.equal(makeS3, 2, 'Failed to reject institution');
+  });
+
+  it('Check distribute fee', async () => {
+    // await acceptanceVotingInstance.closeVote(2,0)
+    await acceptanceVotingInstance.addApplicant(2, zeroAddress, "SIT")
+    await acceptanceVotingInstance.payFee(2, {from: accounts[5], value: 5e18})
+    await acceptanceVotingInstance.openVote(2)
+    await acceptanceVotingInstance.vote(2, true, true, true, true, true, { from: accounts[6] });
+    await acceptanceVotingInstance.vote(2, true, true, true, true, true, { from: accounts[7] });
+    let balance1 = await web3.eth.getBalance(accounts[6]);
+    await acceptanceVotingInstance.distributeFee(2);
+    let balance2 = await web3.eth.getBalance(accounts[6]);
+    await assert.notStrictEqual(balance1, balance2, 'Failed to distribute fee');
   });
 
   //////////
