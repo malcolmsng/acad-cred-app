@@ -220,30 +220,35 @@ contract('Unit Test', function (accounts) {
     truffleAssert.eventEmitted(makeC1, 'vote_close');
   });
 
-  // it('Check approved status', async () => {
-  //   // Open vote
-  //   await institutionInstance.updateInstitutionStatus(0);
-  //   let makeS1 = await institutionInstance.getInstitutionState(0);
-  //   await assert.equal(makeS1, 0, 'Failed to approve institution');
-  // });
+  it('Check pending status', async () => {
+    // Open vote
+    let instID = await institutionInstance.addInstitution('National University of Singaporea', 'Singapore', 'Singapore', '1.1', '101.1', {
+      from: accounts[0],
+    });
+    let makeS2 = await institutionInstance.getInstitutionState(1);
+    assert.equal(makeS2.toString(), '1', 'Institution status not pending');
+  });
 
-  // it('Check pending status', async () => {
-  //   // Open vote
-  //   await institutionInstance.addInstitution('National University of Singaporea', 'Singapore', 'Singapore', '1.1', '101.1', {
-  //     from: accounts[2],
-  //   });
-  //   let makeS2 = await institutionInstance.getInstitutionState(1);
-  //   await assert.equal(makeS2, 1, 'Institution status not pending');
-  // });
+  it('Check approved status', async () => {
+    // Open vote
+    let app_paid = await acceptanceVotingInstance.payFee(1, accounts[10], { from: accounts[10], value: oneEth.multipliedBy(5) });
+    await acceptanceVotingInstance.openVote(1);
+    await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[1] });
+    await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[2] });
+    await acceptanceVotingInstance.closeVote(1, 9);
+    await institutionInstance.updateInstitutionStatus(1);
+    let makeS1 = await institutionInstance.getInstitutionState(1);
+    await assert.equal(makeS1.toString(), '0', 'Failed to approve institution');
+  });
 
   it('Check rejected status', async () => {
     // Open vote
-    await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[1] });
-    await acceptanceVotingInstance.vote(1, false, false, true, true, false, { from: accounts[2] });
+    await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[1] });
+    await acceptanceVotingInstance.vote(0, false, false, true, true, false, { from: accounts[2] });
     await acceptanceVotingInstance.closeVote(0, 9);
     await institutionInstance.updateInstitutionStatus(0);
     let makeS3 = await institutionInstance.getInstitutionState(0);
-    await assert.strictEqual(makeS3, 2, 'Failed to reject institution');
+    assert.strictEqual(makeS3.toString(), '2', 'Failed to reject institution');
   });
 
   it('Check distribute fee', async () => {

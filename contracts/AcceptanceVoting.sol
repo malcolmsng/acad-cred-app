@@ -97,14 +97,14 @@ contract AcceptanceVoting {
   }
 
   function addApplicant(
-    uint256 institutionID,
-    address institutionAddress,
-    string calldata institutionName
+    uint256 applicantNumber,
+    address _applicantAddress,
+    string calldata _applicantName
   ) external {
-    applicantAddress[institutionID] = institutionAddress;
-    applicantName[institutionID] = institutionName;
-    applicantVoteScore[institutionID] = 0;
-    applicantVotingState[institutionID] = VotingState.CLOSED;
+    applicantAddress[applicantNumber] = _applicantAddress;
+    applicantName[applicantNumber] = _applicantName;
+    applicantVoteScore[applicantNumber] = 0;
+    applicantVotingState[applicantNumber] = VotingState.CLOSED;
   }
 
   function getApplicantName(
@@ -192,7 +192,7 @@ contract AcceptanceVoting {
     uint256 scoreNeeded
   ) public isChairman {
     require(
-      currentState[applicantNumber] == VotingState.OPEN,
+      applicantVotingState[applicantNumber] == VotingState.OPEN,
       "Vote is not open"
     );
     require(
@@ -212,6 +212,7 @@ contract AcceptanceVoting {
       );
       addCommitteeMember(applicantAddress[applicantNumber]);
     } else if (applicantVoteScore[applicantNumber] < scoreNeeded) {
+      isApproved[applicantNumber] = false;
       emit vote_results(
         "Not accepted",
         applicantNumber,
@@ -221,7 +222,8 @@ contract AcceptanceVoting {
     }
 
     isConcluded[applicantNumber] = true;
-    applicantAddress[applicantNumber] = address(0);
+    delete applicantAddress[applicantNumber];
+    // applicantVotingState[applicantNumber] = VotingState.CLOSED;
     distributeFee(applicantNumber);
 
     emit vote_close(applicantNumber, block.number);
@@ -263,7 +265,7 @@ contract AcceptanceVoting {
   function getVotingState(
     uint256 applicantNumber
   ) public view returns (VotingState) {
-    return currentState[applicantNumber];
+    return applicantVotingState[applicantNumber];
   }
 
   function getFee() public view returns (uint256) {

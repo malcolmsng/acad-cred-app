@@ -70,7 +70,7 @@ contract Institution {
     string memory institutionCity,
     string memory institutionLatitude,
     string memory institutionLongitude
-  ) public ownerOnly returns (uint256 instId) {
+  ) public ownerOnly returns (uint256) {
     require(
       bytes(institutionName).length > 0,
       "Institution name cannot be empty"
