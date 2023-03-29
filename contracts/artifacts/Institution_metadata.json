@@ -1,0 +1,403 @@
+{
+	"compiler": {
+		"version": "0.5.17+commit.d19bba13"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "contract AcceptanceVoting",
+						"name": "acceptanceVotingAddr",
+						"type": "address"
+					}
+				],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "inst",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"indexed": false,
+						"internalType": "enum Institution.institutionState",
+						"name": "state",
+						"type": "uint8"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "id",
+						"type": "uint256"
+					}
+				],
+				"name": "add_institution",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "inst",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"indexed": false,
+						"internalType": "enum Institution.institutionState",
+						"name": "state",
+						"type": "uint8"
+					}
+				],
+				"name": "approve_institution",
+				"type": "event"
+			},
+			{
+				"constant": false,
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "newInstitution",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "institutionName",
+						"type": "string"
+					}
+				],
+				"name": "addInstitution",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "instId",
+						"type": "uint256"
+					}
+				],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"constant": false,
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "instId",
+						"type": "uint256"
+					}
+				],
+				"name": "approveInstitution",
+				"outputs": [],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"constant": false,
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "instId",
+						"type": "uint256"
+					}
+				],
+				"name": "deleteInstitution",
+				"outputs": [],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "instId",
+						"type": "uint256"
+					}
+				],
+				"name": "getInstitutionCity",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "instId",
+						"type": "uint256"
+					}
+				],
+				"name": "getInstitutionCountry",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "instId",
+						"type": "uint256"
+					}
+				],
+				"name": "getInstitutionLatitude",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "instId",
+						"type": "uint256"
+					}
+				],
+				"name": "getInstitutionLongitude",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "instId",
+						"type": "uint256"
+					}
+				],
+				"name": "getInstitutionName",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "instId",
+						"type": "uint256"
+					}
+				],
+				"name": "getInstitutionOwner",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "instId",
+						"type": "uint256"
+					}
+				],
+				"name": "getInstitutionState",
+				"outputs": [
+					{
+						"internalType": "enum Institution.institutionState",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "institutions",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "country",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "city",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "latitude",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "longitude",
+						"type": "string"
+					},
+					{
+						"internalType": "enum Institution.institutionState",
+						"name": "state",
+						"type": "uint8"
+					},
+					{
+						"internalType": "address",
+						"name": "owner",
+						"type": "address"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [],
+				"name": "numInstitutions",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"methods": {
+				"addInstitution(address,string)": {
+					"details": "Create an institution",
+					"params": {
+						"institutionName": "The name of the institution to be added",
+						"newInstitution": "The address of the institution to be added"
+					},
+					"return": "instId The id of the institution that was added"
+				},
+				"approveInstitution(uint256)": {
+					"details": "Approve an institution",
+					"params": {
+						"instId": "The id of the institution to approve"
+					}
+				},
+				"deleteInstitution(uint256)": {
+					"details": "Delete an institution",
+					"params": {
+						"instId": "The id of the institution to delete"
+					}
+				}
+			}
+		},
+		"userdoc": {
+			"methods": {}
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/Institution.sol": "Institution"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/AcceptanceVoting.sol": {
+			"keccak256": "0x0db450889022929029fa3304bb6824174efb3caefd22c00a391a2a2ce2a002a4",
+			"urls": [
+				"bzz-raw://86914ccedef542226d351b31f8dd2c1d73163044c3c309f48b0b7a48262dcdac",
+				"dweb:/ipfs/QmPZdcY8NNH1PdCFyZdMrWiyz5Ldyi2WxeuSN5vJGSJRKU"
+			]
+		},
+		"contracts/Institution.sol": {
+			"keccak256": "0x1aec27e64cd730a2b1ce2df72e03502b485f2d5f79623aac252f26d9dca303da",
+			"urls": [
+				"bzz-raw://4aea44b74b6798eb43069457ea1198b775c4cc13ccc68457fb9c6276d43c4cc0",
+				"dweb:/ipfs/Qmba4Fe4asxPxGkZXiTxS5WfAYPgZJMcAjzzVr4hHDXxt9"
+			]
+		}
+	},
+	"version": 1
+}
