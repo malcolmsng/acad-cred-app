@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: UNLICENSE
-pragma solidity >=0.5.0;
+pragma solidity ^0.8.17;
 pragma experimental ABIEncoderV2;
 
 import "./Institution.sol";
@@ -54,7 +54,7 @@ contract Credential {
 
   Institution institutionContract;
 
-  constructor(Institution insitutionContractAddr) public {
+  constructor(Institution insitutionContractAddr) {
     institutionContract = insitutionContractAddr;
   }
 
