@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.5.0;
+pragma solidity ^0.8.17;
 
 contract AcceptanceVoting {
   enum VotingState {
@@ -78,7 +78,7 @@ contract AcceptanceVoting {
 
   // should the person who deploys the contract be the chairman?
   // or should we allocate the chairman
-  constructor(uint256 fee, uint256 voteDuration) public {
+  constructor(uint256 fee, uint256 voteDuration) {
     committeeChairman = msg.sender;
     applicationFee = fee;
     votingTimeframe = voteDuration;
