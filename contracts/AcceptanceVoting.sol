@@ -59,9 +59,10 @@ contract AcceptanceVoting {
 
   //Events
   event new_chairman(address newChairman);
-  event new_committee_member(address newCommitteeMember);
-  event remove_committee_member(address committeeMember);
+  event new_committee_member(address newCommitteeMember, uint256 committeeSize);
+  event remove_committee_member(address committeeMember, uint256 committeeSize);
   event new_committee_size(uint256 size);
+  event applicant_paid(uint256 applicantNumber);
   event voted(
     address committeeMember,
     uint256 applicantNumber,
@@ -79,7 +80,7 @@ contract AcceptanceVoting {
   // should the person who deploys the contract be the chairman?
   // or should we allocate the chairman
   // committee max size 10 to begin with
-  constructor(uint256 fee, uint256 voteDuration) public {
+  constructor(uint256 fee, uint256 voteDuration) {
     committeeChairman = msg.sender;
     committeeSize = 10;
     applicationFee = fee;
@@ -160,9 +161,12 @@ contract AcceptanceVoting {
   }
 
   function payFee(uint applicantNumber, address applicantAdd) public payable {
-    require(msg.value / 1E18 >= applicationFee, "Application fee is 5 ETH ");
+    require(msg.value / 1E18 >= applicationFee, "Application fee is 5 ETH");
+    require(hasPaid[applicantNumber] == false, "Applicant fee has been paid");
     hasPaid[applicantNumber] = true;
+    applicantVotingState[applicantNumber] = VotingState.CLOSED;
     applicantAddress[applicantNumber] = applicantAdd;
+    emit applicant_paid(applicantNumber);
     // payable(committeeChairman).transfer(msg.value);
   }
 
@@ -276,6 +280,10 @@ contract AcceptanceVoting {
     return committeeMembers;
   }
 
+  function getAmountOfCommitteeMembers() public view returns (uint256) {
+    return committeeMembers.length;
+  }
+
   function changeDeadline(uint256 votingDuration) public isChairman {
     votingTimeframe = votingDuration;
   }
@@ -304,7 +312,7 @@ contract AcceptanceVoting {
       }
     }
 
-    emit remove_committee_member(user);
+    emit remove_committee_member(user, committeeMembers.length);
   }
 
   function addCommitteeMember(address user) public isChairman {
@@ -318,7 +326,7 @@ contract AcceptanceVoting {
     );
     committeeMembers.push(user);
     isCommitteeMember[user] = true;
-    emit new_committee_member(user);
+    emit new_committee_member(user, committeeMembers.length);
   }
 
   function changeChairman(address user) public isChairman {
