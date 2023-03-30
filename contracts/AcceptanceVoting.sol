@@ -55,7 +55,7 @@ contract AcceptanceVoting {
   uint256 votingTimeframe;
 
   // applicant => voting state for that applicant
-  mapping(uint256 => VotingState) currentState;
+  //mapping(uint256 => VotingState) applicantVotingState;
 
   //Events
   event new_chairman(address newChairman);
@@ -70,7 +70,13 @@ contract AcceptanceVoting {
   );
   event vote_open(uint256 applicantNumber, uint256 blockNumber);
   event vote_close(uint256 applicantNumber, uint256 blockNumber);
-  event vote_results(
+  event vote_results_accepted(
+    string outcome,
+    uint256 applicantNumber,
+    uint256 applicantScore,
+    uint256 scoreNeeded
+  );
+  event vote_results_rejected(
     string outcome,
     uint256 applicantNumber,
     uint256 applicantScore,
@@ -83,9 +89,12 @@ contract AcceptanceVoting {
     uint256 acc_balance
   );
 
+  event testEvent();
+
   // should the person who deploys the contract be the chairman?
   // or should we allocate the chairman
   // committee max size 10 to begin with
+
   constructor(uint256 fee, uint256 voteDuration) {
     committeeChairman = msg.sender;
     committeeSize = 10;
@@ -142,6 +151,7 @@ contract AcceptanceVoting {
     );
     hasVoted[msg.sender][applicantNumber] = true;
 
+    emit testEvent();
     // Do voting calculation
     uint256 vote_score = 0;
     if (hasPhyiscalPremise) {
@@ -167,6 +177,21 @@ contract AcceptanceVoting {
   }
 
   function payFee(uint applicantNumber, address applicantAdd) public payable {
+    require(msg.value / 1E16 >= applicationFee, "Application fee is 5 ETH");
+    require(hasPaid[applicantNumber] == false, "Applicant fee has been paid");
+    hasPaid[applicantNumber] = true;
+    applicantVotingState[applicantNumber] = VotingState.CLOSED;
+    applicantAddress[applicantNumber] = applicantAdd;
+    //payable(committeeChairman).transfer(msg.value);
+    emit applicant_paid(applicantNumber);
+    //emit testEvent(msg.value / 1E16);
+  }
+
+  // temp function while payFee is under works
+  function acknowledgePay(
+    uint applicantNumber,
+    address applicantAdd
+  ) public payable {
     require(msg.value / 1E18 >= applicationFee, "Application fee is 5 ETH");
     require(hasPaid[applicantNumber] == false, "Applicant fee has been paid");
     hasPaid[applicantNumber] = true;
@@ -210,16 +235,17 @@ contract AcceptanceVoting {
 
     if (applicantVoteScore[applicantNumber] >= scoreNeeded) {
       isApproved[applicantNumber] = true;
-      emit vote_results(
+      emit vote_results_accepted(
         "Accepted",
         applicantNumber,
         applicantVoteScore[applicantNumber],
         scoreNeeded
       );
-      addCommitteeMember(applicantAddress[applicantNumber]);
+      //addCommitteeMember(applicantAddress[applicantNumber]); ///figure out why not working
     } else if (applicantVoteScore[applicantNumber] < scoreNeeded) {
       isApproved[applicantNumber] = false;
-      emit vote_results(
+
+      emit vote_results_rejected(
         "Not accepted",
         applicantNumber,
         applicantVoteScore[applicantNumber],
@@ -230,7 +256,7 @@ contract AcceptanceVoting {
     isConcluded[applicantNumber] = true;
     delete applicantAddress[applicantNumber];
     // applicantVotingState[applicantNumber] = VotingState.CLOSED;
-    distributeFee(applicantNumber);
+    // distributeFee(applicantNumber);
 
     emit vote_close(applicantNumber, block.number);
   }
