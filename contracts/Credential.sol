@@ -510,6 +510,8 @@ contract Credential {
       return "REVOKED";
     } else if (_state == credentialState.EXPIRED) {
       return "EXPIRED";
+    } else if (_state == credentialState.DELETED) {
+      return "DELETED";
     }
   }
 }

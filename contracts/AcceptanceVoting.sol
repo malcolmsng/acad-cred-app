@@ -40,7 +40,7 @@ contract AcceptanceVoting {
   // applicantId => hasPaid
   mapping(uint256 => bool) hasPaid;
 
-  address[] membersVoted;
+  // address[] membersVoted;
 
   // application fee in wei
   uint256 applicationFee;
@@ -81,6 +81,12 @@ contract AcceptanceVoting {
     uint256 applicantNumber,
     uint256 applicantScore,
     uint256 scoreNeeded
+  );
+  event distributed_fee(
+    address votedMember,
+    uint256 val,
+    uint256 contract_balance,
+    uint256 acc_balance
   );
 
   event testEvent();
@@ -256,21 +262,31 @@ contract AcceptanceVoting {
   }
 
   function distributeFee(uint256 applicantNumber) public payable isChairman {
-    // require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
+    require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
+    require(isConcluded[applicantNumber] == true, "Voting has not concluded");
     // Divide the application fee equally among all committee members
     // members => applicant => true if voted
     // mapping(address => mapping(uint256 => bool)) hasVoted;
     // address[] memory memberVoted;
-    // for (uint256 i = 0; i < committeeMembers.length; i++) {
-    //   if (hasVoted[committeeMembers[i]][applicantNumber]) {
-    //     membersVoted.push(committeeMembers[i]);
-    //   }
-    // }
-    // uint256 val = applicationFee / membersVoted.length;
-    // for (uint256 j = 0; j < membersVoted.length; j++) {
-    //   address payable recipient = payable(membersVoted[j]);
-    //   recipient.transfer(val);
-    // }
+    uint256 membersVotedLength;
+    for (uint256 i = 0; i < committeeMembers.length; i++) {
+      if (hasVoted[committeeMembers[i]][applicantNumber]) {
+        membersVotedLength++;
+      }
+    }
+    uint256 val = (applicationFee * 1E18) / membersVotedLength;
+    for (uint256 j = 0; j < committeeMembers.length; j++) {
+      if (hasVoted[committeeMembers[j]][applicantNumber]) {
+        address payable recipient = payable(committeeMembers[j]);
+        recipient.transfer(val);
+        emit distributed_fee(
+          committeeMembers[j],
+          val,
+          address(this).balance,
+          address(committeeMembers[j]).balance
+        );
+      }
+    }
   }
 
   // getters
