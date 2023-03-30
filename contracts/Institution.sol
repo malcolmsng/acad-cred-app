@@ -28,6 +28,10 @@ contract Institution {
 
   event approve_institution(address inst, string name, institutionState state);
 
+  event pending_institution(address inst, string name, institutionState state);
+
+  event rejected_institution(address inst, string name, institutionState state);
+
   uint256 public numInstitutions = 0;
   mapping(uint256 => institution) public institutions;
   address _owner;
@@ -70,7 +74,7 @@ contract Institution {
     string memory institutionCity,
     string memory institutionLatitude,
     string memory institutionLongitude
-  ) public ownerOnly returns (uint256) {
+  ) public returns (uint256 instId) {
     require(
       bytes(institutionName).length > 0,
       "Institution name cannot be empty"
@@ -166,8 +170,20 @@ contract Institution {
       );
     } else if ((approvalResult != true) && (votingConcluded == true)) {
       institutions[instId].state = institutionState.REJECTED;
+
+      emit rejected_institution(
+        institutions[instId].owner,
+        institutions[instId].name,
+        institutions[instId].state
+      );
     } else {
       institutions[instId].state = institutionState.PENDING;
+
+      emit pending_institution(
+        institutions[instId].owner,
+        institutions[instId].name,
+        institutions[instId].state
+      );
     }
   }
 
