@@ -75,7 +75,6 @@ contract Institution {
     string memory institutionLatitude,
     string memory institutionLongitude
   ) public returns (uint256 instId) {
-
     require(
       bytes(institutionName).length > 0,
       "Institution name cannot be empty"

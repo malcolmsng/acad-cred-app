@@ -83,7 +83,6 @@ contract AcceptanceVoting {
     uint256 scoreNeeded
   );
 
-  event applicant_paid(uint256 applicantNumber);
   event testEvent();
 
   // should the person who deploys the contract be the chairman?
@@ -184,7 +183,10 @@ contract AcceptanceVoting {
   }
 
   // temp function while payFee is under works
-  function acknowledgePay(uint applicantNumber, address applicantAdd) public {
+  function acknowledgePay(
+    uint applicantNumber,
+    address applicantAdd
+  ) public payable {
     require(msg.value / 1E18 >= applicationFee, "Application fee is 5 ETH");
     require(hasPaid[applicantNumber] == false, "Applicant fee has been paid");
     hasPaid[applicantNumber] = true;
@@ -192,7 +194,6 @@ contract AcceptanceVoting {
     applicantAddress[applicantNumber] = applicantAdd;
     emit applicant_paid(applicantNumber);
     // payable(committeeChairman).transfer(msg.value);
-
   }
 
   function openVote(uint256 applicantNumber) external isChairman {
@@ -240,7 +241,6 @@ contract AcceptanceVoting {
       isApproved[applicantNumber] = false;
 
       emit vote_results_rejected(
-
         "Not accepted",
         applicantNumber,
         applicantVoteScore[applicantNumber],
@@ -291,7 +291,6 @@ contract AcceptanceVoting {
   // i.e. VotingState.OPEN == 0
   function getVotingState(
     uint256 applicantNumber
-
   ) public view returns (VotingState) {
     return applicantVotingState[applicantNumber];
   }
