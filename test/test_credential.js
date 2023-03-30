@@ -24,11 +24,21 @@ contract('Credential Contract Unit Test', function (accounts) {
     institutionInstance = await Institution.deployed();
   });
 
-  console.log('Testing Institution and Acceptance Voting contract');
+  /* 
+  Account 1: Approve Institution - National University of Singapore
+  Account 2: Pending Institution - Nanyang Technological University
 
-  it('Add Institution', async () => {
-    // Create approved institution
-    let makeI1 = await institutionInstance.addInstitution(
+  Account 4: Voting Member 1
+  Account 5: Voting Member 2
+
+  Account 7: Student A - Lyn
+  Account 8: Student B - Keith
+  Account 9: Student C - Remus
+  */
+
+  it('Add Approved Institution', async () => {
+    // Create institution
+    await institutionInstance.addInstitution(
       'National University of Singapore',
       'Singapore',
       'Singapore',
@@ -36,26 +46,18 @@ contract('Credential Contract Unit Test', function (accounts) {
       '103.851959',
       { from: accounts[1] },
     );
-
-    let makeM1 = await acceptanceVotingInstance.addCommitteeMember(accounts[1]);
-    truffleAssert.eventEmitted(makeM1, 'new_committee_member');
-
-    let makeM2 = await acceptanceVotingInstance.addCommitteeMember(accounts[2]);
-    truffleAssert.eventEmitted(makeM2, 'new_committee_member');
-
-    // Attempt to pay 5 eth
-    let app_paid = await acceptanceVotingInstance.acknowledgePay(0, accounts[1], {from: accounts[0], value: oneEth.multipliedBy(5) });
-    truffleAssert.eventEmitted(app_paid, 'applicant_paid');
-
-    let makeO1 = await acceptanceVotingInstance.openVote(0);
-
-    let makeV1 = await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[1] });
-
-    let makeV2 = await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[2] });
-
+    // Add voting committee members
+    await acceptanceVotingInstance.addCommitteeMember(accounts[4]);
+    await acceptanceVotingInstance.addCommitteeMember(accounts[5]);
+    // 5 Eth applicant payment for voting   //acknowledgePay is a temp function while the actual payment function is being built
+    await acceptanceVotingInstance.acknowledgePay(0, accounts[1], {from: accounts[1], value: oneEth.multipliedBy(5) });
+    // Vote to approve institution
+    await acceptanceVotingInstance.openVote(0);
+    await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[4] });
+    await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[5] });
     await acceptanceVotingInstance.changeDeadline(0);
-    let makeC1 = await acceptanceVotingInstance.closeVote(0, 9);
-    await institutionInstance.updateInstitutionStatus(0);
+    await acceptanceVotingInstance.closeVote(0, 9);
+    // Approve institution
     let makeS1 = await institutionInstance.updateInstitutionStatus(0);
     truffleAssert.eventEmitted(makeS1, 'approve_institution');
   });
@@ -120,7 +122,7 @@ contract('Credential Contract Unit Test', function (accounts) {
       'Singapore',
       '1.2963',
       '103.8502',
-      { from: accounts[3] },
+      { from: accounts[2] },
     );
 
     // Unapproved institutions cannot add credential
