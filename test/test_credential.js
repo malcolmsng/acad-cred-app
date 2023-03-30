@@ -38,19 +38,14 @@ contract('Credential Contract Unit Test', function (accounts) {
 
   it('Add Approved Institution', async () => {
     // Create institution
-    await institutionInstance.addInstitution(
-      'National University of Singapore',
-      'Singapore',
-      'Singapore',
-      '1.290270',
-      '103.851959',
-      { from: accounts[1] },
-    );
+    await institutionInstance.addInstitution('National University of Singapore', 'Singapore', 'Singapore', '1.290270', '103.851959', {
+      from: accounts[1],
+    });
     // Add voting committee members
     await acceptanceVotingInstance.addCommitteeMember(accounts[4]);
     await acceptanceVotingInstance.addCommitteeMember(accounts[5]);
     // 5 Eth applicant payment for voting   //acknowledgePay is a temp function while the actual payment function is being built
-    await acceptanceVotingInstance.acknowledgePay(0, accounts[1], {from: accounts[1], value: oneEth.multipliedBy(5) });
+    await acceptanceVotingInstance.acknowledgePay(0, accounts[1], { from: accounts[1], value: oneEth.multipliedBy(5) });
     // Vote to approve institution
     await acceptanceVotingInstance.openVote(0);
     await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[4] });
@@ -61,7 +56,6 @@ contract('Credential Contract Unit Test', function (accounts) {
     let makeS1 = await institutionInstance.updateInstitutionStatus(0);
     truffleAssert.eventEmitted(makeS1, 'approve_institution');
   });
-
 
   it('Add Credential', async () => {
     // Create a credential with an expiry date
@@ -291,5 +285,87 @@ contract('Credential Contract Unit Test', function (accounts) {
 
   it('Incorrect Delete Credential', async () => {
     await truffleAssert.reverts(credentialInstance.deleteCredential(1, { from: accounts[1] }), 'Only active credentials can be deleted');
+  });
+
+  it('View Credential by Id', async () => {
+    //Add a credential (1st Credential of Remus)
+    await credentialInstance.addCredential(
+      'Remus Kwan',
+      'A0223344L',
+      'Computer Science',
+      'Bachelor of Computing',
+      'Dr Tan Keng Soon',
+      0, // Institution ID
+      toUnixTime(2023, 3, 26), // Issuance date
+      toUnixTime(2028, 4, 21), // Expiry date
+      { from: accounts[1], value: oneEth.dividedBy(100) },
+    );
+
+    let credentialView = await credentialInstance.viewCredentialById(2, { from: accounts[1] });
+    await assert.strictEqual(
+      credentialView,
+      `ID: 3\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Computer Science\nDegree Level: Bachelor of Computing\nEndorser Name: Dr Tan Keng Soon\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\nIssuer: ${accounts[1]}\n`,
+      'Student credential info is not correct',
+    );
+  });
+
+  it('View Credentials by Student Name', async () => {
+    //Add a second credential (2nd Credential of Remus)
+    let makeC1 = await credentialInstance.addCredential(
+      'Remus Kwan',
+      'A0223344L',
+      'Business Analytics',
+      'Bachelor of Business Administration',
+      'Dr Bock See',
+      0, // Institution ID
+      toUnixTime(2023, 3, 26), // Issuance date
+      toUnixTime(2028, 4, 21), // Expiry date
+      { from: accounts[1], value: oneEth.dividedBy(100) },
+    );
+
+    let studentCredentials = await credentialInstance.viewAllCredentialsOfStudentByStudentName('Remus Kwan', { from: accounts[1] });
+    await assert.strictEqual(
+      studentCredentials,
+      `ID: 3\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Computer Science\nDegree Level: Bachelor of Computing\nEndorser Name: Dr Tan Keng Soon\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\nIssuer: ${accounts[1]}\nID: 4\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Business Analytics\nDegree Level: Bachelor of Business Administration\nEndorser Name: Dr Bock See\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\nIssuer: ${accounts[1]}\n`,
+      'Student credential info is not correct',
+    );
+  });
+
+  it('View Credentials by Student Number', async () => {
+    //Add a second credential (2nd Credential of Keith)
+    //First credential of Keith is revoked
+    await credentialInstance.addCredential(
+      'Keith Chan',
+      'A0654321K',
+      'Law',
+      'Bachelor of Laws',
+      'Dr Lee Tiong Tsu',
+      0, // Institution ID
+      toUnixTime(2023, 3, 21), // Issuance date
+      0, // Expiry date
+      { from: accounts[1], value: oneEth.dividedBy(100) },
+    );
+
+    let studentCredentials = await credentialInstance.viewAllCredentialsOfStudentByStudentNumber('A0654321K', { from: accounts[1] });
+
+    await assert.strictEqual(
+      studentCredentials,
+      `Credential for student Keith Chan has been revoked\nID: 4\nStudent Name: Keith Chan\nStudent Number: A0654321K\nCourse Name: Law\nDegree Level: Bachelor of Laws\nEndorser Name: Dr Lee Tiong Tsu\nIssuance Date: 1679356800\nExpiry Date: 0\nState: ACTIVE\nIssuer: ${accounts[1]}\n`,
+      'Student credential info is not correct',
+    );
+  });
+
+  it('View All Credentials', async () => {
+    let allStudentCredentials = await credentialInstance.viewAllCredentials({ from: accounts[1] });
+
+    //Observe that:
+    //Id 0 (Lyn Tan) is not shown since credential was deleted, Id 1 (Keith Chan) credential was revoked
+    //Id 2 and 3 for Remus's credentials, Id 4 for Keith credential shows up
+
+    await assert.strictEqual(
+      allStudentCredentials,
+      `Credential for student Keith Chan has been revoked\nID: 2\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Computer Science\nDegree Level: Bachelor of Computing\nEndorser Name: Dr Tan Keng Soon\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\nIssuer: ${accounts[1]}\nOwner: ${accounts[9]}\nID: 3\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Business Analytics\nDegree Level: Bachelor of Business Administration\nEndorser Name: Dr Bock See\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\nIssuer: ${accounts[1]}\nOwner: ${accounts[9]}\nID: 4\nStudent Name: Keith Chan\nStudent Number: A0654321K\nCourse Name: Law\nDegree Level: Bachelor of Laws\nEndorser Name: Dr Lee Tiong Tsu\nIssuance Date: 1679356800\nExpiry Date: 0\nState: ACTIVE\nIssuer: ${accounts[1]}\n`,
+      'Student credential info is not correct',
+    );
   });
 });
