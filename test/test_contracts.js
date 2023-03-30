@@ -269,7 +269,6 @@ contract('Unit Test', function (accounts) {
       0, // Institution ID
       toUnixTime(2023, 3, 21), // Issuance date
       toUnixTime(2028, 3, 21), // Expiry date
-      accounts[7], // Student A,
       { from: accounts[1], value: oneEth.dividedBy(100) },
     );
     await assert.notStrictEqual(makeC1, undefined, 'Failed to add credential');
@@ -285,7 +284,6 @@ contract('Unit Test', function (accounts) {
       0, // Institution ID
       toUnixTime(2023, 3, 21), // Issuance date
       0, // Expiry date
-      accounts[8], // Student B,
       { from: accounts[1], value: oneEth.dividedBy(100) },
     );
     await assert.notStrictEqual(makeC2, undefined, 'Failed to add credential');
@@ -304,7 +302,6 @@ contract('Unit Test', function (accounts) {
         0, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         toUnixTime(2028, 3, 21), // Expiry date
-        accounts[7], // Student A,
         { from: accounts[1], value: oneEth.dividedBy(1000) },
       ),
       'At least 0.01ETH needed to create credential',
@@ -331,7 +328,6 @@ contract('Unit Test', function (accounts) {
         2, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         toUnixTime(2028, 3, 21), // Expiry date
-        accounts[7], // Student A,
         { from: accounts[2], value: oneEth.dividedBy(100) },
       ),
       'The institution must be approved to perform this function',
@@ -408,7 +404,6 @@ contract('Unit Test', function (accounts) {
         0, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
-        accounts[7], // Student A,
         { from: accounts[1], value: oneEth.dividedBy(100) },
       ),
       'Endorser name cannot be empty',
@@ -423,7 +418,6 @@ contract('Unit Test', function (accounts) {
         0, // Institution ID
         0, // Issuance date
         0, // Expiry date
-        accounts[7], // Student A,
         { from: accounts[1], value: oneEth.dividedBy(100) },
       ),
       'Issuance date cannot be empty',
@@ -438,7 +432,6 @@ contract('Unit Test', function (accounts) {
         0, // Institution ID
         toUnixTime(2023, 8, 1), // Issuance date
         0, // Expiry date
-        accounts[7], // Student A,
         { from: accounts[1], value: oneEth.dividedBy(100) },
       ),
       'Issuance date cannot be a future date. Please enter an issuance date that is today or in the past.',
@@ -453,7 +446,6 @@ contract('Unit Test', function (accounts) {
         0, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
-        zeroAddress, // Student A,
         { from: accounts[1], value: oneEth.dividedBy(100) },
       ),
       'Student address cannot be empty',
@@ -491,7 +483,6 @@ contract('Unit Test', function (accounts) {
       0, // Institution ID
       toUnixTime(2023, 3, 26), // Issuance date
       toUnixTime(2028, 4, 21), // Expiry date
-      accounts[9], // Student C,
       { from: accounts[1], value: oneEth.dividedBy(100) },
     );
 
@@ -514,7 +505,6 @@ contract('Unit Test', function (accounts) {
       0, // Institution ID
       toUnixTime(2023, 3, 26), // Issuance date
       toUnixTime(2028, 4, 21), // Expiry date
-      accounts[9], // Student C,
       { from: accounts[1], value: oneEth.dividedBy(100) },
     );
 
@@ -538,7 +528,6 @@ contract('Unit Test', function (accounts) {
       0, // Institution ID
       toUnixTime(2023, 3, 21), // Issuance date
       0, // Expiry date
-      accounts[8], // Student B,
       { from: accounts[1], value: oneEth.dividedBy(100) },
     );
 
@@ -564,5 +553,4 @@ contract('Unit Test', function (accounts) {
       'Student credential info is not correct',
     );
   });
-  
 });
