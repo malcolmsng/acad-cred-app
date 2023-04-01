@@ -115,14 +115,9 @@ contract('Institution Contract Unit Test', function (accounts) {
   });
 
   it('Delete Institution', async () => {
-    await institutionInstance.addInstitution(
-      'Nanyang University',
-      'Singapore',
-      'Singapore',
-      '1.290270',
-      '103.851959',
-      { from: accounts[2] },
-    );
+    await institutionInstance.addInstitution('Nanyang University', 'Singapore', 'Singapore', '1.290270', '103.851959', {
+      from: accounts[2],
+    });
 
     let deleteI1 = await institutionInstance.deleteInstitution(1, { from: accounts[0] });
     truffleAssert.eventEmitted(deleteI1, 'delete_institution');
@@ -138,7 +133,7 @@ contract('Institution Contract Unit Test', function (accounts) {
     await acceptanceVotingInstance.addCommitteeMember(accounts[4]);
     await acceptanceVotingInstance.addCommitteeMember(accounts[5]);
     // 5 Eth applicant payment for voting   //acknowledgePay is a temp function while the actual payment function is being built
-    await acceptanceVotingInstance.acknowledgePay(0, accounts[1], {from: accounts[1], value: oneEth.multipliedBy(5) });
+    await acceptanceVotingInstance.payFee(0, accounts[1], { from: accounts[1], value: oneEth.multipliedBy(5) });
     // Vote to approve institution
     await acceptanceVotingInstance.openVote(0);
     await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[4] });
@@ -152,13 +147,9 @@ contract('Institution Contract Unit Test', function (accounts) {
 
   it('Check pending status', async () => {
     // Create new institution
-    await institutionInstance.addInstitution(
-      'National University of Singapura', 
-      'Singapore', 
-      'Singapore', 
-      '1.1', 
-      '101.1', 
-      {from: accounts[3],});
+    await institutionInstance.addInstitution('National University of Singapura', 'Singapore', 'Singapore', '1.1', '101.1', {
+      from: accounts[3],
+    });
     // Check pending status
     let makeS2 = await institutionInstance.updateInstitutionStatus(1);
     truffleAssert.eventEmitted(makeS2, 'pending_institution');
@@ -166,6 +157,7 @@ contract('Institution Contract Unit Test', function (accounts) {
 
   it('Check rejected status', async () => {
     // Vote for instutition
+    await acceptanceVotingInstance.payFee(1, accounts[12], { from: accounts[12], value: oneEth.multipliedBy(5) });
     await acceptanceVotingInstance.openVote(1);
     await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[4] });
     await acceptanceVotingInstance.vote(1, false, false, true, true, false, { from: accounts[5] });
@@ -174,5 +166,4 @@ contract('Institution Contract Unit Test', function (accounts) {
     let makeS3 = await institutionInstance.updateInstitutionStatus(1);
     truffleAssert.eventEmitted(makeS3, 'rejected_institution');
   });
-
 });

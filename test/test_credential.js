@@ -38,19 +38,14 @@ contract('Credential Contract Unit Test', function (accounts) {
 
   it('Add Approved Institution', async () => {
     // Create institution
-    await institutionInstance.addInstitution(
-      'National University of Singapore',
-      'Singapore',
-      'Singapore',
-      '1.290270',
-      '103.851959',
-      { from: accounts[1] },
-    );
+    await institutionInstance.addInstitution('National University of Singapore', 'Singapore', 'Singapore', '1.290270', '103.851959', {
+      from: accounts[1],
+    });
     // Add voting committee members
     await acceptanceVotingInstance.addCommitteeMember(accounts[4]);
     await acceptanceVotingInstance.addCommitteeMember(accounts[5]);
     // 5 Eth applicant payment for voting   //acknowledgePay is a temp function while the actual payment function is being built
-    await acceptanceVotingInstance.acknowledgePay(0, accounts[1], {from: accounts[1], value: oneEth.multipliedBy(5) });
+    await acceptanceVotingInstance.payFee(0, accounts[1], { from: accounts[1], value: oneEth.multipliedBy(5) });
     // Vote to approve institution
     await acceptanceVotingInstance.openVote(0);
     await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[4] });
@@ -61,7 +56,6 @@ contract('Credential Contract Unit Test', function (accounts) {
     let makeS1 = await institutionInstance.updateInstitutionStatus(0);
     truffleAssert.eventEmitted(makeS1, 'approve_institution');
   });
-
 
   it('Add Credential', async () => {
     // Create a credential with an expiry date
