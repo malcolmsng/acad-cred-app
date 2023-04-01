@@ -46,15 +46,15 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
     truffleAssert.eventEmitted(makeI1, 'add_institution');
   });
 
-  it('Add committee member', async () => {
-    // Add committee member
-    let makeM1 = await acceptanceVotingInstance.addCommitteeMember(accounts[4]);
+  it('Add member', async () => {
+    // Add member
+    let makeM1 = await acceptanceVotingInstance.addCommitteeMember(accounts[1]);
     truffleAssert.eventEmitted(makeM1, 'new_committee_member');
 
-    let makeM2 = await acceptanceVotingInstance.addCommitteeMember(accounts[5]);
+    let makeM2 = await acceptanceVotingInstance.addCommitteeMember(accounts[2]);
     truffleAssert.eventEmitted(makeM2, 'new_committee_member');
 
-    let makeM3 = await acceptanceVotingInstance.addCommitteeMember(accounts[6]);
+    let makeM3 = await acceptanceVotingInstance.addCommitteeMember(accounts[3]);
     truffleAssert.eventEmitted(makeM3, 'new_committee_member');
 
     cMembers = await acceptanceVotingInstance.getAmountOfCommitteeMembers();
@@ -64,72 +64,55 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
   it('Incorrect add member', async () => {
     // User cannot add member if user is not a chairman
     await truffleAssert.reverts(
-      acceptanceVotingInstance.addCommitteeMember(accounts[6], { from: accounts[1] }),
+      acceptanceVotingInstance.addCommitteeMember(accounts[3], { from: accounts[1] }),
       'Only Chairman can call this function',
     );
 
     // Current members cannot be added again
-    await truffleAssert.reverts(acceptanceVotingInstance.addCommitteeMember(accounts[4]), 'User is already a current committee Member');
+    await truffleAssert.reverts(acceptanceVotingInstance.addCommitteeMember(accounts[3]), 'User is already a current committee Member');
   });
 
   it('Remove member', async () => {
     // Add member
-    let makeM3 = await acceptanceVotingInstance.removeCommitteeMember(accounts[6]);
+    let makeM3 = await acceptanceVotingInstance.removeCommitteeMember(accounts[3]);
     truffleAssert.eventEmitted(makeM3, 'remove_committee_member');
   });
 
   it('Incorrect remove member', async () => {
     // User cannot remove member if user is not a chairman
     await truffleAssert.reverts(
-      acceptanceVotingInstance.removeCommitteeMember(accounts[4], { from: accounts[5] }),
+      acceptanceVotingInstance.removeCommitteeMember(accounts[3], { from: accounts[1] }),
       'Only Chairman can call this function',
     );
 
     // non-members cannot be removed again
-    await truffleAssert.reverts(acceptanceVotingInstance.removeCommitteeMember(accounts[6]), 'User is not a current committee Member');
+    await truffleAssert.reverts(acceptanceVotingInstance.removeCommitteeMember(accounts[5]), 'User is not a current committee Member');
   });
 
   it('Applicant pays fee to begin acceptance process', async () => {
     let before_balance = new BigNumber(await web3.eth.getBalance(acceptanceVotingInstance.address)) / oneEth;
-    
-    /*
     // Attempt to pay less than 5 eth
     await truffleAssert.reverts(
-      acceptanceVotingInstance.payFee(0, accounts[1], { from: accounts[10], value: oneEth }),
+      acceptanceVotingInstance.payFee(0, accounts[10], { from: accounts[10], value: oneEth }),
       'Application fee is 5 ETH',
     );
-
     // Attempt to pay 5 eth
-    let app_paid = await acceptanceVotingInstance.payFee(0, accounts[1], { from: accounts[10], value: oneEth.multipliedBy(5) });
+    let app_paid = await acceptanceVotingInstance.payFee(0, accounts[10], { from: accounts[10], value: oneEth.multipliedBy(5) });
     truffleAssert.eventEmitted(app_paid, 'applicant_paid');
-
     // Attempt to pay again
     await truffleAssert.reverts(
-      acceptanceVotingInstance.payFee(0, accounts[1], { from: accounts[1], value: oneEth.multipliedBy(5) }),
+      acceptanceVotingInstance.payFee(0, accounts[10], { from: accounts[10], value: oneEth.multipliedBy(5) }),
       'Applicant fee has been paid',
     );
-
     let after_balance = new BigNumber(await web3.eth.getBalance(acceptanceVotingInstance.address)) / oneEth;
     let diff = after_balance - before_balance;
     await assert.strictEqual(diff, 5, 'Pay fee does not work');
-    */
-
-    // Attempt to pay 5 eth
-    let app_paid = await acceptanceVotingInstance.acknowledgePay(0, accounts[1], {from: accounts[1], value: oneEth.multipliedBy(5) });
-    truffleAssert.eventEmitted(app_paid, 'applicant_paid');
-
-    // Attempt to pay again
-    await truffleAssert.reverts(
-      acceptanceVotingInstance.acknowledgePay(0, accounts[1], { from: accounts[1], value: oneEth.multipliedBy(5) }),
-      'Applicant fee has been paid',
-    );
-    
   });
 
   it('Cannot vote when vote has not opened', async () => {
-    // User cannot vote if vote has not opened
+    // User cannot remove member if user is not a chairman
     await truffleAssert.reverts(
-      acceptanceVotingInstance.vote(0, true, true, true, false, false, { from: accounts[4] }),
+      acceptanceVotingInstance.vote(0, true, true, true, false, false, { from: accounts[1] }),
       'Applicant is not open for voting',
     );
   });
@@ -143,11 +126,10 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
 
   it('Vote', async () => {
     // Open vote
-    let makeV1 = await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[4] });
+    let makeV1 = await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[1] });
     truffleAssert.eventEmitted(makeV1, 'voted');
 
-    let makeV2 = await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[5] });
-
+    let makeV2 = await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[2] });
     truffleAssert.eventEmitted(makeV2, 'voted');
   });
 
@@ -156,27 +138,47 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
     await truffleAssert.reverts(acceptanceVotingInstance.closeVote(0, 9), 'Deadline not up');
   });
 
-  it('Close vote', async () => {
-    // Close vote
-    await acceptanceVotingInstance.changeDeadline(0);
-    let makeC1 = await acceptanceVotingInstance.closeVote(0, 9);
-    truffleAssert.eventEmitted(makeC1, 'vote_close');
+  it('Check pending status', async () => {
+    // Open vote
+    let instID = await institutionInstance.addInstitution('National University of Singaporea', 'Singapore', 'Singapore', '1.1', '101.1', {
+      from: accounts[0],
+    });
+    let makeS2 = await institutionInstance.getInstitutionState(1);
+    assert.equal(makeS2.toString(), '1', 'Institution status not pending');
   });
 
-  it('Check distribute fee', async () => {
-    /*
-    // await acceptanceVotingInstance.closeVote(2,0)
-    await acceptanceVotingInstance.addApplicant(2, zeroAddress, 'SIT');
-    await acceptanceVotingInstance.payFee(2, { from: accounts[5], value: 5e18 });
-    await acceptanceVotingInstance.openVote(2);
-    await acceptanceVotingInstance.vote(2, true, true, true, true, true, { from: accounts[6] });
-    await acceptanceVotingInstance.vote(2, true, true, true, true, true, { from: accounts[7] });
-    let balance1 = await web3.eth.getBalance(accounts[6]);
-    await acceptanceVotingInstance.distributeFee(2);
-    let balance2 = await web3.eth.getBalance(accounts[6]);
-    await assert.notStrictEqual(balance1, balance2, 'Failed to distribute fee');
-    */
+  it('Check approved status and vote close function and distribute fee function', async () => {
+    // Open vote
+    let balance1_init = new BigNumber(await web3.eth.getBalance(accounts[1])) / oneEth;
+    let balance2_init = new BigNumber(await web3.eth.getBalance(accounts[2])) / oneEth;
+    await acceptanceVotingInstance.changeDeadline(0);
+    await acceptanceVotingInstance.payFee(1, accounts[10], { from: accounts[10], value: oneEth.multipliedBy(5) });
+    let contract_before_balance = new BigNumber(await web3.eth.getBalance(acceptanceVotingInstance.address)) / oneEth;
+    await acceptanceVotingInstance.openVote(1);
+    await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[1] });
+    await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[2] });
+    await acceptanceVotingInstance.closeVote(1, 9);
+    await institutionInstance.updateInstitutionStatus(1);
+    let makeS1 = await institutionInstance.getInstitutionState(1);
+    let balance1_final = new BigNumber(await web3.eth.getBalance(accounts[1])) / oneEth;
+    let balance2_final = new BigNumber(await web3.eth.getBalance(accounts[2])) / oneEth;
+    let contract_after_balance = new BigNumber(await web3.eth.getBalance(acceptanceVotingInstance.address)) / oneEth;
+    assert.equal(makeS1.toString(), '0', 'Failed to approve institution');
+    assert.strictEqual(contract_before_balance - contract_after_balance, 5, 'Distribute Fee not working for contract');
+    assert.strictEqual(balance1_final - balance1_init > 2.49, true, 'Distribute Fee not working for account 1');
+    assert.strictEqual(balance2_final - balance2_init > 2.49, true, 'Distribute Fee not working for account 2');
   });
+
+  it('Check rejected status', async () => {
+    // Open vote
+    await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[1] });
+    await acceptanceVotingInstance.vote(0, false, false, true, true, false, { from: accounts[2] });
+    await acceptanceVotingInstance.closeVote(0, 9);
+    await institutionInstance.updateInstitutionStatus(0);
+    let makeS3 = await institutionInstance.getInstitutionState(0);
+    assert.strictEqual(makeS3.toString(), '2', 'Failed to reject institution');
+  });
+
 
 
 });
