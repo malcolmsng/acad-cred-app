@@ -177,7 +177,7 @@ contract AcceptanceVoting {
   }
 
   function payFee(uint applicantNumber, address applicantAdd) public payable {
-    require(msg.value / 1E16 >= applicationFee, "Application fee is 5 ETH");
+    require(msg.value / 1E18 >= applicationFee, "Application fee is 5 ETH");
     require(hasPaid[applicantNumber] == false, "Applicant fee has been paid");
     hasPaid[applicantNumber] = true;
     applicantVotingState[applicantNumber] = VotingState.CLOSED;
@@ -185,20 +185,6 @@ contract AcceptanceVoting {
     //payable(committeeChairman).transfer(msg.value);
     emit applicant_paid(applicantNumber);
     //emit testEvent(msg.value / 1E16);
-  }
-
-  // temp function while payFee is under works
-  function acknowledgePay(
-    uint applicantNumber,
-    address applicantAdd
-  ) public payable {
-    require(msg.value / 1E18 >= applicationFee, "Application fee is 5 ETH");
-    require(hasPaid[applicantNumber] == false, "Applicant fee has been paid");
-    hasPaid[applicantNumber] = true;
-    applicantVotingState[applicantNumber] = VotingState.CLOSED;
-    applicantAddress[applicantNumber] = applicantAdd;
-    emit applicant_paid(applicantNumber);
-    // payable(committeeChairman).transfer(msg.value);
   }
 
   function openVote(uint256 applicantNumber) external isChairman {
@@ -255,8 +241,8 @@ contract AcceptanceVoting {
 
     isConcluded[applicantNumber] = true;
     delete applicantAddress[applicantNumber];
-    // applicantVotingState[applicantNumber] = VotingState.CLOSED;
-    // distributeFee(applicantNumber);
+    applicantVotingState[applicantNumber] = VotingState.CLOSED;
+    distributeFee(applicantNumber);
 
     emit vote_close(applicantNumber, block.number);
   }

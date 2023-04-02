@@ -45,7 +45,7 @@ contract('Credential Contract Unit Test', function (accounts) {
     await acceptanceVotingInstance.addCommitteeMember(accounts[4]);
     await acceptanceVotingInstance.addCommitteeMember(accounts[5]);
     // 5 Eth applicant payment for voting   //acknowledgePay is a temp function while the actual payment function is being built
-    await acceptanceVotingInstance.acknowledgePay(0, accounts[1], { from: accounts[1], value: oneEth.multipliedBy(5) });
+    await acceptanceVotingInstance.payFee(0, accounts[1], { from: accounts[1], value: oneEth.multipliedBy(5) });
     // Vote to approve institution
     await acceptanceVotingInstance.openVote(0);
     await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[4] });
