@@ -255,6 +255,7 @@ contract Credential {
     }
 
     //If Active State
+    //Do not display issuer address
     return
       string(
         abi.encodePacked(
@@ -284,9 +285,6 @@ contract Credential {
           "\n",
           "State: ",
           credentialStateToString(c.state),
-          "\n",
-          "Issuer: ",
-          addressToString(c.issuer),
           "\n"
         )
       );
