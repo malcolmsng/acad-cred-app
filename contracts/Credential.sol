@@ -244,6 +244,153 @@ contract Credential {
   }
 
   /**
+    @dev View all credentials
+    @return _credentials An array of all credentials that have been created as a string
+   */
+  function viewAllCredentials()
+    public
+    view
+    returns (string memory _credentials)
+  {
+    string[] memory creds = new string[](numCredentials);
+    for (uint256 i = 0; i < numCredentials; i++) {
+      creds[i] = encodeCredentialToString(i);
+    }
+    _credentials = concat(creds);
+  }
+
+  /**
+    @dev View credential by credId
+    @param credId The id of the credential to view
+    @return _credential The credential to be viewed as a string
+   */
+  function viewCredentialById(
+    uint256 credId
+  ) public view validCredentialId(credId) returns (string memory _credential) {
+    _credential = encodeCredentialToString(credId);
+  }
+
+  /**
+    @dev View all credentials of student
+    @param studentName The student name to view all the credentials of
+    @return _credentials All the credentials of the student to be viewed as a string
+  */
+  function viewAllCredentialsOfStudentByStudentName(
+    string memory studentName
+  )
+    public
+    view
+    validStudentName(studentName)
+    returns (string memory _credentials)
+  {
+    string[] memory creds = new string[](numCredentials);
+    for (uint256 i = 0; i < numCredentials; i++) {
+      if (
+        keccak256(bytes(credentials[i].studentName)) ==
+        keccak256(bytes(studentName))
+      ) {
+        creds[i] = encodeCredentialToString(i);
+      }
+    }
+    _credentials = concat(creds);
+  }
+
+  /**
+    @dev View all credentials of student
+    @param studentNumber The student number to view all the credentials of
+    @return _credentials All the credentials of the student to be viewed as a string
+  */
+  function viewAllCredentialsOfStudentByStudentNumber(
+    string memory studentNumber
+  )
+    public
+    view
+    validStudentNumber(studentNumber)
+    returns (string memory _credentials)
+  {
+    string[] memory creds = new string[](numCredentials);
+    for (uint256 i = 0; i < numCredentials; i++) {
+      if (
+        keccak256(bytes(credentials[i].studentNumber)) ==
+        keccak256(bytes(studentNumber))
+      ) {
+        creds[i] = encodeCredentialToString(i);
+      }
+    }
+    _credentials = concat(creds);
+  }
+
+  ///////////// Getter Functions /////////////
+
+  function getCredentialStudentName(
+    uint256 credId
+  ) public view validCredentialId(credId) returns (string memory) {
+    return credentials[credId].studentName;
+  }
+
+  function getCredentialStudentNumber(
+    uint256 credId
+  )
+    public
+    view
+    issuerOnly(credId)
+    validCredentialId(credId)
+    returns (string memory)
+  {
+    return credentials[credId].studentNumber;
+  }
+
+  function getCredentialCourseName(
+    uint256 credId
+  ) public view validCredentialId(credId) returns (string memory) {
+    return credentials[credId].courseName;
+  }
+
+  function getCredentialDegreeLevel(
+    uint256 credId
+  ) public view validCredentialId(credId) returns (string memory) {
+    return credentials[credId].degreeLevel;
+  }
+
+  function getCredentialEndorserName(
+    uint256 credId
+  ) public view validCredentialId(credId) returns (string memory) {
+    return credentials[credId].endorserName;
+  }
+
+  function getCredentialIssuanceDate(
+    uint256 credId
+  ) public view validCredentialId(credId) returns (uint) {
+    return credentials[credId].issuanceDate;
+  }
+
+  function getCredentialExpiryDate(
+    uint256 credId
+  ) public view validCredentialId(credId) returns (uint) {
+    return credentials[credId].expiryDate;
+  }
+
+  function getCredentialState(
+    uint256 credId
+  )
+    public
+    view
+    issuerOnly(credId)
+    validCredentialId(credId)
+    returns (credentialState)
+  {
+    return credentials[credId].state;
+  }
+
+  function getCredentialIssuer(
+    uint256 credId
+  ) public view validCredentialId(credId) returns (address) {
+    return credentials[credId].issuer;
+  }
+
+  ///////////// Helper Functions /////////////
+
+  /**
     @dev Compare equality of 2 strings
     @param a First string to compare
     @param b Second string to compare first string against
@@ -338,150 +485,9 @@ contract Credential {
   }
 
   /**
-    @dev View all credentials
-    @return _credentials An array of all credentials that have been created as a string
-   */
-  function viewAllCredentials()
-    public
-    view
-    returns (string memory _credentials)
-  {
-    string[] memory creds = new string[](numCredentials);
-    for (uint256 i = 0; i < numCredentials; i++) {
-      creds[i] = encodeCredentialToString(i);
-    }
-    _credentials = concat(creds);
-  }
-
-  /**
-    @dev View credential by credId
-    @param credId The id of the credential to view
-    @return _credential The credential to be viewed as a string
-   */
-  function viewCredentialById(
-    uint256 credId
-  ) public view validCredentialId(credId) returns (string memory _credential) {
-    _credential = encodeCredentialToString(credId);
-  }
-
-  /**
-    @dev View all credentials of student
-    @param studentName The student name to view all the credentials of
-    @return _credentials All the credentials of the student to be viewed as a string
+    @dev Convert uint into string
+    @param _i uint to convert
   */
-  function viewAllCredentialsOfStudentByStudentName(
-    string memory studentName
-  )
-    public
-    view
-    validStudentName(studentName)
-    returns (string memory _credentials)
-  {
-    string[] memory creds = new string[](numCredentials);
-    for (uint256 i = 0; i < numCredentials; i++) {
-      if (
-        keccak256(bytes(credentials[i].studentName)) ==
-        keccak256(bytes(studentName))
-      ) {
-        creds[i] = encodeCredentialToString(i);
-      }
-    }
-    _credentials = concat(creds);
-  }
-
-  /**
-    @dev View all credentials of student
-    @param studentNumber The student number to view all the credentials of
-    @return _credentials All the credentials of the student to be viewed as a string
-  */
-  function viewAllCredentialsOfStudentByStudentNumber(
-    string memory studentNumber
-  )
-    public
-    view
-    validStudentNumber(studentNumber)
-    returns (string memory _credentials)
-  {
-    string[] memory creds = new string[](numCredentials);
-    for (uint256 i = 0; i < numCredentials; i++) {
-      if (
-        keccak256(bytes(credentials[i].studentNumber)) ==
-        keccak256(bytes(studentNumber))
-      ) {
-        creds[i] = encodeCredentialToString(i);
-      }
-    }
-    _credentials = concat(creds);
-  }
-
-  //Getters
-  function getCredentialStudentName(
-    uint256 credId
-  ) public view validCredentialId(credId) returns (string memory) {
-    return credentials[credId].studentName;
-  }
-
-  function getCredentialStudentNumber(
-    uint256 credId
-  )
-    public
-    view
-    issuerOnly(credId)
-    validCredentialId(credId)
-    returns (string memory)
-  {
-    return credentials[credId].studentNumber;
-  }
-
-  function getCredentialCourseName(
-    uint256 credId
-  ) public view validCredentialId(credId) returns (string memory) {
-    return credentials[credId].courseName;
-  }
-
-  function getCredentialDegreeLevel(
-    uint256 credId
-  ) public view validCredentialId(credId) returns (string memory) {
-    return credentials[credId].degreeLevel;
-  }
-
-  function getCredentialEndorserName(
-    uint256 credId
-  ) public view validCredentialId(credId) returns (string memory) {
-    return credentials[credId].endorserName;
-  }
-
-  function getCredentialIssuanceDate(
-    uint256 credId
-  ) public view validCredentialId(credId) returns (uint) {
-    return credentials[credId].issuanceDate;
-  }
-
-  function getCredentialExpiryDate(
-    uint256 credId
-  ) public view validCredentialId(credId) returns (uint) {
-    return credentials[credId].expiryDate;
-  }
-
-  function getCredentialState(
-    uint256 credId
-  )
-    public
-    view
-    issuerOnly(credId)
-    validCredentialId(credId)
-    returns (credentialState)
-  {
-    return credentials[credId].state;
-  }
-
-  function getCredentialIssuer(
-    uint256 credId
-  ) public view validCredentialId(credId) returns (address) {
-    return credentials[credId].issuer;
-  }
-
-  //helper method to convert uint256 into string
   function uintToString(uint _i) private pure returns (string memory) {
     if (_i == 0) {
       return "0";
@@ -504,7 +510,10 @@ contract Credential {
     return string(bstr);
   }
 
-  //helper method to convert uint256 into string
+  /**
+    @dev Convert uint256 into string
+    @param _i uint256 to convert
+  */
   function uint256ToString(uint256 _i) private pure returns (string memory) {
     if (_i == 0) {
       return "0";
@@ -527,7 +536,10 @@ contract Credential {
     return string(bstr);
   }
 
-  //helper method to convert address into string
+  /**
+    @dev Convert address into string
+    @param _address addresss to convert
+  */
   function addressToString(
     address _address
   ) private pure returns (string memory) {
@@ -543,7 +555,10 @@ contract Credential {
     return string(str);
   }
 
-  //helper method to convert credential state into string
+  /**
+    @dev Convert credentialState into string
+    @param _state credentialState to convert
+  */
   function credentialStateToString(
     credentialState _state
   ) private pure returns (string memory state) {
