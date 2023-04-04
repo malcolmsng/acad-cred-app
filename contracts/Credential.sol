@@ -50,11 +50,11 @@ contract Credential {
   // credentialId => credential
   mapping(uint256 => credential) public credentials;
 
-  // student name => credential
-  mapping(string => credential) public credentialsByStudentName;
+  // student name => list of credential IDs
+  mapping(string => uint256[]) public credentialIdsByStudentName;
 
-  // student number => credential
-  mapping(string => credential) public credentialsByStudentNumber;
+  // student number => list of credential IDs
+  mapping(string => uint256[]) public credentialIdsByStudentNumber;
 
   Institution institutionContract;
 
@@ -92,6 +92,30 @@ contract Credential {
       institutionContract.getInstitutionState(instId) ==
         Institution.institutionState.APPROVED,
       "The institution must be approved to perform this function"
+    );
+    _;
+  }
+
+  /**
+    @dev Require student to have at least one credential in the system
+    @param studentName The name of the student to check
+   */
+  modifier validStudentName(string memory studentName) {
+    require(
+      credentialIdsByStudentName[studentName].length > 0,
+      "Student name does not exist. There are no credentials under this student name."
+    );
+    _;
+  }
+
+  /**
+    @dev Require student to have at least one credential in the system
+    @param studentNumber The student number of the student to check
+   */
+  modifier validStudentNumber(string memory studentNumber) {
+    require(
+      credentialIdsByStudentNumber[studentNumber].length > 0,
+      "Student number does not exist. There are no credentials under this student number."
     );
     _;
   }
@@ -153,8 +177,8 @@ contract Credential {
     // Commit to state variables
     uint256 newCredentialId = numCredentials++;
     credentials[newCredentialId] = newCredential;
-    credentialsByStudentName[studentName] = newCredential;
-    credentialsByStudentNumber[studentNumber] = newCredential;
+    credentialIdsByStudentName[studentName].push(newCredentialId);
+    credentialIdsByStudentNumber[studentNumber].push(newCredentialId);
 
     emit add_credential(
       newCredentialId,
@@ -347,7 +371,12 @@ contract Credential {
   */
   function viewAllCredentialsOfStudentByStudentName(
     string memory studentName
-  ) public view returns (string memory _credentials) {
+  )
+    public
+    view
+    validStudentName(studentName)
+    returns (string memory _credentials)
+  {
     string[] memory creds = new string[](numCredentials);
     for (uint256 i = 0; i < numCredentials; i++) {
       if (
@@ -367,7 +396,12 @@ contract Credential {
   */
   function viewAllCredentialsOfStudentByStudentNumber(
     string memory studentNumber
-  ) public view returns (string memory _credentials) {
+  )
+    public
+    view
+    validStudentNumber(studentNumber)
+    returns (string memory _credentials)
+  {
     string[] memory creds = new string[](numCredentials);
     for (uint256 i = 0; i < numCredentials; i++) {
       if (
