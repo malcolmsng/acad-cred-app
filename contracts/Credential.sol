@@ -283,14 +283,12 @@ contract Credential {
     validStudentName(studentName)
     returns (string memory _credentials)
   {
-    string[] memory creds = new string[](numCredentials);
-    for (uint256 i = 0; i < numCredentials; i++) {
-      if (
-        keccak256(bytes(credentials[i].studentName)) ==
-        keccak256(bytes(studentName))
-      ) {
-        creds[i] = encodeCredentialToString(i);
-      }
+    uint256[] memory student_credentials = credentialIdsByStudentName[
+      studentName
+    ];
+    string[] memory creds = new string[](student_credentials.length);
+    for (uint256 i = 0; i < student_credentials.length; i++) {
+      creds[i] = encodeCredentialToString(student_credentials[i]);
     }
     _credentials = concat(creds);
   }
@@ -308,14 +306,12 @@ contract Credential {
     validStudentNumber(studentNumber)
     returns (string memory _credentials)
   {
-    string[] memory creds = new string[](numCredentials);
-    for (uint256 i = 0; i < numCredentials; i++) {
-      if (
-        keccak256(bytes(credentials[i].studentNumber)) ==
-        keccak256(bytes(studentNumber))
-      ) {
-        creds[i] = encodeCredentialToString(i);
-      }
+    uint256[] memory student_credentials = credentialIdsByStudentNumber[
+      studentNumber
+    ];
+    string[] memory creds = new string[](student_credentials.length);
+    for (uint256 i = 0; i < student_credentials.length; i++) {
+      creds[i] = encodeCredentialToString(student_credentials[i]);
     }
     _credentials = concat(creds);
   }
