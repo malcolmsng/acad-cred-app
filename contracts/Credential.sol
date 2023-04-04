@@ -152,12 +152,9 @@ contract Credential {
 
     // Commit to state variables
     uint256 newCredentialId = numCredentials++;
-    credentials[newCredentialId] = newCredential; 
-    credentialsByStudentName[studentName] = newCredential; 
-    credentialsByStudentNumber[studentNumber] = newCredential; 
-
-    // address payable recipient = payable(msg.sender);
-    // recipient.transfer(msg.value - 1E16);
+    credentials[newCredentialId] = newCredential;
+    credentialsByStudentName[studentName] = newCredential;
+    credentialsByStudentNumber[studentNumber] = newCredential;
 
     emit add_credential(
       newCredentialId,

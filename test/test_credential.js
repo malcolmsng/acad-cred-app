@@ -73,6 +73,11 @@ contract('Credential Contract Unit Test', function (accounts) {
     await assert.notStrictEqual(makeC1, undefined, 'Failed to add credential');
     truffleAssert.eventEmitted(makeC1, 'add_credential');
 
+    let c1StudentName = await credentialInstance.getCredentialStudentName(0);
+    await assert.strictEqual(c1StudentName, 'Lyn Tan', 'Credential created with incorrect student name');
+    let c1CourseName = await credentialInstance.getCredentialCourseName(0);
+    await assert.strictEqual(c1CourseName, 'Information Systems', 'Credential created with incorrect course name');
+
     // Create a credential without an expiry date
     let makeC2 = await credentialInstance.addCredential(
       'Keith Chan',
@@ -87,6 +92,11 @@ contract('Credential Contract Unit Test', function (accounts) {
     );
     await assert.notStrictEqual(makeC2, undefined, 'Failed to add credential');
     truffleAssert.eventEmitted(makeC2, 'add_credential');
+
+    let c2StudentName = await credentialInstance.getCredentialStudentName(1);
+    await assert.strictEqual(c2StudentName, 'Keith Chan', 'Credential created with incorrect student name');
+    let c2CourseName = await credentialInstance.getCredentialCourseName(1);
+    await assert.strictEqual(c2CourseName, 'Artificial Intelligence Specialisation', 'Credential created with incorrect course name');
   });
 
   it('Incorrect Add Credential', async () => {
