@@ -46,7 +46,15 @@ contract Credential {
   );
 
   uint256 public numCredentials = 0;
+
+  // credentialId => credential
   mapping(uint256 => credential) public credentials;
+
+  // student name => credential
+  mapping(string => credential) public credentialsByStudentName;
+
+  // student number => credential
+  mapping(string => credential) public credentialsByStudentNumber;
 
   Institution institutionContract;
 
@@ -142,8 +150,14 @@ contract Credential {
       msg.sender // Issuer (institution)
     );
 
+    // Commit to state variables
     uint256 newCredentialId = numCredentials++;
-    credentials[newCredentialId] = newCredential; // commit to state variable
+    credentials[newCredentialId] = newCredential; 
+    credentialsByStudentName[studentName] = newCredential; 
+    credentialsByStudentNumber[studentNumber] = newCredential; 
+
+    // address payable recipient = payable(msg.sender);
+    // recipient.transfer(msg.value - 1E16);
 
     emit add_credential(
       newCredentialId,
@@ -501,7 +515,7 @@ contract Credential {
   //helper method to convert credential state into string
   function credentialStateToString(
     credentialState _state
-  ) private pure returns (string memory) {
+  ) private pure returns (string memory state) {
     if (_state == credentialState.ACTIVE) {
       return "ACTIVE";
     } else if (_state == credentialState.REVOKED) {
