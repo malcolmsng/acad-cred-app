@@ -73,6 +73,11 @@ contract('Credential Contract Unit Test', function (accounts) {
     await assert.notStrictEqual(makeC1, undefined, 'Failed to add credential');
     truffleAssert.eventEmitted(makeC1, 'add_credential');
 
+    let c1StudentName = await credentialInstance.getCredentialStudentName(0);
+    await assert.strictEqual(c1StudentName, 'Lyn Tan', 'Credential created with incorrect student name');
+    let c1CourseName = await credentialInstance.getCredentialCourseName(0);
+    await assert.strictEqual(c1CourseName, 'Information Systems', 'Credential created with incorrect course name');
+
     // Create a credential without an expiry date
     let makeC2 = await credentialInstance.addCredential(
       'Keith Chan',
@@ -87,6 +92,11 @@ contract('Credential Contract Unit Test', function (accounts) {
     );
     await assert.notStrictEqual(makeC2, undefined, 'Failed to add credential');
     truffleAssert.eventEmitted(makeC2, 'add_credential');
+
+    let c2StudentName = await credentialInstance.getCredentialStudentName(1);
+    await assert.strictEqual(c2StudentName, 'Keith Chan', 'Credential created with incorrect student name');
+    let c2CourseName = await credentialInstance.getCredentialCourseName(1);
+    await assert.strictEqual(c2CourseName, 'Artificial Intelligence Specialisation', 'Credential created with incorrect course name');
   });
 
   it('Incorrect Add Credential', async () => {
@@ -278,7 +288,7 @@ contract('Credential Contract Unit Test', function (accounts) {
   });
 
   it('View Credential by Id', async () => {
-    //Add a credential (1st Credential of Remus)
+    // Add a credential (1st Credential of Remus)
     await credentialInstance.addCredential(
       'Remus Kwan',
       'A0223344L',
@@ -301,7 +311,7 @@ contract('Credential Contract Unit Test', function (accounts) {
   });
 
   it('View Credentials by Student Name', async () => {
-    //Add a second credential (2nd Credential of Remus)
+    // Add a second credential (2nd Credential of Remus)
     await credentialInstance.addCredential(
       'Remus Kwan',
       'A0223344L',
@@ -324,8 +334,8 @@ contract('Credential Contract Unit Test', function (accounts) {
   });
 
   it('View Credentials by Student Number', async () => {
-    //Add a second credential (2nd Credential of Keith)
-    //First credential of Keith is revoked
+    // Add a second credential (2nd Credential of Keith)
+    // First credential of Keith is revoked
     await credentialInstance.addCredential(
       'Keith Chan',
       'A0654321K',
@@ -347,12 +357,29 @@ contract('Credential Contract Unit Test', function (accounts) {
     );
   });
 
+  it('Incorrect View Credential', async () => {
+    // View credential with an invalid credential ID
+    await truffleAssert.reverts(credentialInstance.viewCredentialById(5), 'The credential id is not valid');
+
+    // View credential with invalid student name (no credentials under that student)
+    await truffleAssert.reverts(
+      credentialInstance.viewAllCredentialsOfStudentByStudentName('Malcolm Sng'),
+      'Student name does not exist. There are no credentials under this student name.',
+    );
+
+    // View credential with invalid student number (no credentials under that student)
+    await truffleAssert.reverts(
+      credentialInstance.viewAllCredentialsOfStudentByStudentNumber('A9999999Z'),
+      'Student number does not exist. There are no credentials under this student number.',
+    );
+  });
+
   it('View All Credentials', async () => {
     let allStudentCredentials = await credentialInstance.viewAllCredentials({ from: accounts[1] });
 
-    //Observe that:
-    //Id 0 (Lyn Tan) is not shown since credential was deleted, Id 1 (Keith Chan) credential was revoked
-    //Id 2 and 3 for Remus's credentials, Id 4 for Keith credential shows up
+    // Observe that:
+    // Id 0 (Lyn Tan) is not shown since credential was deleted, Id 1 (Keith Chan) credential was revoked
+    // Id 2 and 3 for Remus's credentials, Id 4 for Keith credential shows up
 
     await assert.strictEqual(
       allStudentCredentials,
