@@ -76,6 +76,8 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
     // Add member
     let makeM3 = await acceptanceVotingInstance.removeCommitteeMember(accounts[3]);
     truffleAssert.eventEmitted(makeM3, 'remove_committee_member');
+    cMembers = await acceptanceVotingInstance.getAmountOfCommitteeMembers();
+    await assert.strictEqual(cMembers.toNumber(), 3, 'Add Committee Member does not work');
   });
 
   it('Incorrect remove member', async () => {
@@ -122,9 +124,15 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
     // let pay1 = await acceptanceVotingInstance.payFee(1, { from: accounts[1], value: 5e18 });
     let makeO1 = await acceptanceVotingInstance.openVote(0);
     truffleAssert.eventEmitted(makeO1, 'vote_open');
+    let vstate01 = await acceptanceVotingInstance.getVotingState(0);
+    assert.strictEqual(vstate01.toString(), '0', 'Failed to open vote');
   });
 
   it('Vote', async () => {
+    await truffleAssert.reverts(
+      acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[3] }),
+      'You are not a committee member',
+    );
     // Open vote
     let makeV1 = await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[1] });
     truffleAssert.eventEmitted(makeV1, 'voted');
@@ -133,7 +141,7 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
     truffleAssert.eventEmitted(makeV2, 'voted');
   });
 
-  it('Cannot close vote', async () => {
+  it('Cannot close vote before deadline is up', async () => {
     // Too early to close vote
     await truffleAssert.reverts(acceptanceVotingInstance.closeVote(0, 9), 'Deadline not up');
   });
@@ -178,7 +186,4 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
     let makeS3 = await institutionInstance.getInstitutionState(0);
     assert.strictEqual(makeS3.toString(), '2', 'Failed to reject institution');
   });
-
-
-
 });
