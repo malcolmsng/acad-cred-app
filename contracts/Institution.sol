@@ -125,7 +125,9 @@ contract Institution {
     @dev Delete an institution
     @param instId The id of the institution to delete
    */
-  function deleteInstitution(uint256 instId) public ownerOnly {
+  function deleteInstitution(
+    uint256 instId
+  ) public ownerOnly validInstitutionId(instId) {
     require(
       institutions[instId].state != institutionState.DELETED,
       "Institution has already been deleted from the system."
@@ -156,7 +158,9 @@ contract Institution {
     @dev Update an institution status
     @param instId The id of the institution to approve
    */
-  function updateInstitutionStatus(uint256 instId) public ownerOnly {
+  function updateInstitutionStatus(
+    uint256 instId
+  ) public ownerOnly validInstitutionId(instId) {
     bool approvalResult = acceptanceVotingContract.checkApproved(instId);
     bool votingConcluded = acceptanceVotingContract.checkConcluded(instId);
 

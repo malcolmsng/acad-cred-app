@@ -218,6 +218,7 @@ contract AcceptanceVoting {
     );
 
     // Calculate votes here
+    emit testEvent();
 
     if (applicantVoteScore[applicantNumber] >= scoreNeeded) {
       isApproved[applicantNumber] = true;
