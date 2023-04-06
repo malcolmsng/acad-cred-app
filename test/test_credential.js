@@ -44,7 +44,7 @@ contract('Credential Contract Unit Test', function (accounts) {
     // Add voting committee members
     await acceptanceVotingInstance.addCommitteeMember(accounts[4]);
     await acceptanceVotingInstance.addCommitteeMember(accounts[5]);
-    // 5 Eth applicant payment for voting   //acknowledgePay is a temp function while the actual payment function is being built
+    // 5 Eth applicant payment for voting
     await acceptanceVotingInstance.payFee(0, accounts[1], { from: accounts[1], value: oneEth.multipliedBy(5) });
     // Vote to approve institution
     await acceptanceVotingInstance.openVote(0);
@@ -387,4 +387,5 @@ contract('Credential Contract Unit Test', function (accounts) {
       'Student credential info is not correct',
     );
   });
+
 });

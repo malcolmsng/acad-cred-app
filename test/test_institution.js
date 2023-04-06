@@ -132,7 +132,7 @@ contract('Institution Contract Unit Test', function (accounts) {
     // Set up voting committee
     await acceptanceVotingInstance.addCommitteeMember(accounts[4]);
     await acceptanceVotingInstance.addCommitteeMember(accounts[5]);
-    // 5 Eth applicant payment for voting   //acknowledgePay is a temp function while the actual payment function is being built
+    // 5 Eth applicant payment for voting 
     await acceptanceVotingInstance.payFee(0, accounts[1], { from: accounts[1], value: oneEth.multipliedBy(5) });
     // Vote to approve institution
     await acceptanceVotingInstance.openVote(0);
@@ -157,13 +157,13 @@ contract('Institution Contract Unit Test', function (accounts) {
 
   it('Check rejected status', async () => {
     // Vote for instutition
-    await acceptanceVotingInstance.payFee(1, accounts[12], { from: accounts[12], value: oneEth.multipliedBy(5) });
-    await acceptanceVotingInstance.openVote(1);
-    await acceptanceVotingInstance.vote(1, true, true, true, true, true, { from: accounts[4] });
-    await acceptanceVotingInstance.vote(1, false, false, true, true, false, { from: accounts[5] });
-    await acceptanceVotingInstance.closeVote(1, 9);
+    await acceptanceVotingInstance.payFee(2, accounts[3], { from: accounts[3], value: oneEth.multipliedBy(5) });
+    await acceptanceVotingInstance.openVote(2);
+    await acceptanceVotingInstance.vote(2, true, true, true, true, true, { from: accounts[4] });
+    await acceptanceVotingInstance.vote(2, false, false, true, true, false, { from: accounts[5] });
+    await acceptanceVotingInstance.closeVote(2, 9);
     // Reject institution
-    let makeS3 = await institutionInstance.updateInstitutionStatus(1);
+    let makeS3 = await institutionInstance.updateInstitutionStatus(2);
     truffleAssert.eventEmitted(makeS3, 'rejected_institution');
   });
 });
