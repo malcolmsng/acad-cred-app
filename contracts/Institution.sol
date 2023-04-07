@@ -136,24 +136,6 @@ contract Institution {
     emit delete_institution(instId);
   }
 
-  /*
-  Dummy function for initial testing
-
-  @dev Approve an institution
-  @param instId The id of the institution to approve
-  
-  function approveInstitution(uint256 instId) public votedOnly {
-    // Dummy code just to enable testing of credential functions
-    institutions[instId].state = institutionState.APPROVED;
-
-    emit approve_institution(
-      institutions[instId].owner,
-      institutions[instId].name,
-      institutions[instId].state
-    );
-  }
-  */
-
   /**
     @dev Update an institution status
     @param instId The id of the institution to approve

@@ -246,25 +246,6 @@ contract('Credential Contract Unit Test', function (accounts) {
       'Issuance date cannot be a future date. Please enter an issuance date that is today or in the past.',
     );
 
-    /*
-    // ensure studentAddress is an input of addCredential(), before uncommenting the 9th argument of the addCredential() function below
-
-    await truffleAssert.reverts(
-      credentialInstance.addCredential(
-        'Lyn Tan',
-        'A0123456L',
-        'Information Systems',
-        'Bachelor of Computing',
-        'Dr Li Xiaofan',
-        0, // Institution ID
-        toUnixTime(2023, 3, 21), // Issuance date
-        0, // Expiry date
-        //zeroAddress, // Student A,
-        { from: accounts[1], value: oneEth.dividedBy(100) },
-      ),
-      'Student address cannot be empty',
-    );
-    */
   });
 
   it('Delete Credential', async () => {
