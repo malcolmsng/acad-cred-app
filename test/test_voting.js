@@ -121,7 +121,6 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
 
   it('Open vote', async () => {
     // Open vote
-    // let pay1 = await acceptanceVotingInstance.payFee(1, { from: accounts[1], value: 5e18 });
     let makeO1 = await acceptanceVotingInstance.openVote(0);
     truffleAssert.eventEmitted(makeO1, 'vote_open');
     let vstate01 = await acceptanceVotingInstance.getVotingState(0);
