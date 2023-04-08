@@ -275,8 +275,9 @@ contract Credential {
     @param studentName The student name to view all the credentials of
     @return _credentials All the credentials of the student to be viewed as a string
   */
-  function viewAllCredentialsOfStudentByStudentName(
-    string memory studentName
+  function viewAllCredentialsOfStudentByStudentNameAndInstitutionName(
+    string memory studentName,
+    string memory institutionName
   )
     public
     view
@@ -286,8 +287,10 @@ contract Credential {
     string[] memory creds = new string[](numCredentials);
     for (uint256 i = 0; i < numCredentials; i++) {
       if (
-        keccak256(bytes(credentials[i].studentName)) ==
-        keccak256(bytes(studentName))
+        (keccak256(bytes(credentials[i].studentName)) ==
+          keccak256(bytes(studentName))) &&
+        (keccak256(bytes(credentials[i].issuerName)) ==
+          keccak256(bytes(institutionName)))
       ) {
         creds[i] = encodeCredentialToString(i);
       }
@@ -300,8 +303,9 @@ contract Credential {
     @param studentNumber The student number to view all the credentials of
     @return _credentials All the credentials of the student to be viewed as a string
   */
-  function viewAllCredentialsOfStudentByStudentNumber(
-    string memory studentNumber
+  function viewAllCredentialsOfStudentByStudentNumberAndInstitutionName(
+    string memory studentNumber,
+    string memory institutionName
   )
     public
     view
@@ -311,8 +315,10 @@ contract Credential {
     string[] memory creds = new string[](numCredentials);
     for (uint256 i = 0; i < numCredentials; i++) {
       if (
-        keccak256(bytes(credentials[i].studentNumber)) ==
-        keccak256(bytes(studentNumber))
+        (keccak256(bytes(credentials[i].studentNumber)) ==
+          keccak256(bytes(studentNumber))) &&
+        (keccak256(bytes(credentials[i].issuerName)) ==
+          keccak256(bytes(institutionName)))
       ) {
         creds[i] = encodeCredentialToString(i);
       }

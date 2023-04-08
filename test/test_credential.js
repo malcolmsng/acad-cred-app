@@ -245,7 +245,6 @@ contract('Credential Contract Unit Test', function (accounts) {
       ),
       'Issuance date cannot be a future date. Please enter an issuance date that is today or in the past.',
     );
-
   });
 
   it('Delete Credential', async () => {
@@ -305,7 +304,11 @@ contract('Credential Contract Unit Test', function (accounts) {
       { from: accounts[1], value: oneEth.dividedBy(100) },
     );
 
-    let studentCredentials = await credentialInstance.viewAllCredentialsOfStudentByStudentName('Remus Kwan', { from: accounts[1] });
+    let studentCredentials = await credentialInstance.viewAllCredentialsOfStudentByStudentNameAndInstitutionName(
+      'Remus Kwan',
+      'National University of Singapore',
+      { from: accounts[1] },
+    );
 
     await assert.strictEqual(
       studentCredentials,
@@ -329,7 +332,11 @@ contract('Credential Contract Unit Test', function (accounts) {
       { from: accounts[1], value: oneEth.dividedBy(100) },
     );
 
-    let studentCredentials = await credentialInstance.viewAllCredentialsOfStudentByStudentNumber('A0654321K', { from: accounts[1] });
+    let studentCredentials = await credentialInstance.viewAllCredentialsOfStudentByStudentNumberAndInstitutionName(
+      'A0654321K',
+      'National University of Singapore',
+      { from: accounts[1] },
+    );
 
     await assert.strictEqual(
       studentCredentials,
@@ -344,13 +351,13 @@ contract('Credential Contract Unit Test', function (accounts) {
 
     // View credential with invalid student name (no credentials under that student)
     await truffleAssert.reverts(
-      credentialInstance.viewAllCredentialsOfStudentByStudentName('Malcolm Sng'),
+      credentialInstance.viewAllCredentialsOfStudentByStudentNameAndInstitutionName('Malcolm Sng', 'National University of Singapore'),
       'Student name does not exist. There are no credentials under this student name.',
     );
 
     // View credential with invalid student number (no credentials under that student)
     await truffleAssert.reverts(
-      credentialInstance.viewAllCredentialsOfStudentByStudentNumber('A9999999Z'),
+      credentialInstance.viewAllCredentialsOfStudentByStudentNumberAndInstitutionName('A9999999Z', 'National University of Singapore'),
       'Student number does not exist. There are no credentials under this student number.',
     );
   });
@@ -368,5 +375,4 @@ contract('Credential Contract Unit Test', function (accounts) {
       'Student credential info is not correct',
     );
   });
-
 });
