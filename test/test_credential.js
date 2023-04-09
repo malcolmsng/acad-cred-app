@@ -290,7 +290,7 @@ contract('Credential Contract Unit Test', function (accounts) {
     );
   });
 
-  it('View Credentials by Student Name', async () => {
+  it('View Credentials by Student Name & Institution Name', async () => {
     // Add a second credential (2nd Credential of Remus)
     await credentialInstance.addCredential(
       'Remus Kwan',
@@ -317,7 +317,7 @@ contract('Credential Contract Unit Test', function (accounts) {
     );
   });
 
-  it('View Credentials by Student Number', async () => {
+  it('View Credentials by Student Number & Institution Name', async () => {
     // Add a second credential (2nd Credential of Keith)
     // First credential of Keith is revoked
     await credentialInstance.addCredential(
