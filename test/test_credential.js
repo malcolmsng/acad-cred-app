@@ -28,12 +28,8 @@ contract('Credential Contract Unit Test', function (accounts) {
   Account 1: Approve Institution - National University of Singapore
   Account 2: Pending Institution - Nanyang Technological University
 
-  Account 4: Voting Member 1
-  Account 5: Voting Member 2
-
-  Account 7: Student A - Lyn
-  Account 8: Student B - Keith
-  Account 9: Student C - Remus
+  Account 3: Voting Member 1
+  Account 4: Voting Member 2
   */
 
   it('Add Approved Institution', async () => {
@@ -42,14 +38,14 @@ contract('Credential Contract Unit Test', function (accounts) {
       from: accounts[1],
     });
     // Add voting committee members
+    await acceptanceVotingInstance.addCommitteeMember(accounts[3]);
     await acceptanceVotingInstance.addCommitteeMember(accounts[4]);
-    await acceptanceVotingInstance.addCommitteeMember(accounts[5]);
     // 5 Eth applicant payment for voting
     await acceptanceVotingInstance.payFee(0, accounts[1], { from: accounts[1], value: oneEth.multipliedBy(5) });
     // Vote to approve institution
     await acceptanceVotingInstance.openVote(0);
+    await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[3] });
     await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[4] });
-    await acceptanceVotingInstance.vote(0, true, true, true, true, true, { from: accounts[5] });
     await acceptanceVotingInstance.changeDeadline(0);
     await acceptanceVotingInstance.closeVote(0, 9);
     // Approve institution
@@ -168,7 +164,6 @@ contract('Credential Contract Unit Test', function (accounts) {
         0, // Institution ID
         toUnixTime(2023, 3, 21), // Issuance date
         0, // Expiry date
-        //accounts[7], // Student A,
         { from: accounts[1], value: oneEth.dividedBy(100) },
       ),
       'Student number cannot be empty',
