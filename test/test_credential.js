@@ -114,7 +114,7 @@ contract('Credential Contract Unit Test', function (accounts) {
 
     // Create pending (not approved) institution
     let makeI3 = await institutionInstance.addInstitution(
-      'Singapore Management University',
+      'Nanyang Technological University',
       'Singapore',
       'Singapore',
       '1.2963',
