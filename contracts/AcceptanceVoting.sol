@@ -85,10 +85,6 @@ contract AcceptanceVoting {
   event remove_committee_member(address committeeMember, uint256 committeeSize);
   event new_committee_size(uint256 size);
 
-  // should the person who deploys the contract be the chairman?
-  // or should we allocate the chairman
-  // committee max size 10 to begin with
-
   constructor(uint256 fee, uint256 voteDuration) {
     committeeChairman = msg.sender;
     committeeSize = 10;
@@ -161,7 +157,6 @@ contract AcceptanceVoting {
     hasPaid[applicantNumber] = true;
     applicantVotingState[applicantNumber] = VotingState.CLOSED;
     applicantAddress[applicantNumber] = applicantAdd;
-    //payable(committeeChairman).transfer(msg.value);
     emit applicant_paid(applicantNumber);
   }
 
@@ -170,7 +165,6 @@ contract AcceptanceVoting {
       applicantVotingState[applicantNumber] == VotingState.CLOSED,
       "Applicant already undergoing voting"
     );
-    // require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
 
     // Change voting state
     applicantVotingState[applicantNumber] = VotingState.OPEN;
@@ -204,7 +198,6 @@ contract AcceptanceVoting {
         applicantVoteScore[applicantNumber],
         scoreNeeded
       );
-      //addCommitteeMember(applicantAddress[applicantNumber]); ///figure out why not working
     } else if (applicantVoteScore[applicantNumber] < scoreNeeded) {
       isApproved[applicantNumber] = false;
 
