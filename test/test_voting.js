@@ -22,7 +22,7 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
   Account 1: Voting Member 1
   Account 2: Voting Member 2
   Account 3: Removed Voting Member 3
-  Account 4: Approve Institution - National University of Singapore
+  Account 4: Approved Institution - National University of Singapore
 
   Account 9: Applicant
   */
