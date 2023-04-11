@@ -273,6 +273,7 @@ contract Credential {
   /**
     @dev View all credentials of student
     @param studentName The student name to view all the credentials of
+    @param institutionName The institution name where the student belongs to
     @return _credentials All the credentials of the student to be viewed as a string
   */
   function viewAllCredentialsOfStudentByStudentNameAndInstitutionName(
@@ -301,6 +302,7 @@ contract Credential {
   /**
     @dev View all credentials of student
     @param studentNumber The student number to view all the credentials of
+    @param institutionName The institution name where the student belongs to
     @return _credentials All the credentials of the student to be viewed as a string
   */
   function viewAllCredentialsOfStudentByStudentNumberAndInstitutionName(
