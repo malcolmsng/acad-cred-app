@@ -173,7 +173,8 @@ contract Institution {
     }
   }
 
-  //Getters
+  ///////////// Getter Functions /////////////
+  
   function getInstitutionName(
     uint256 instId
   ) public view validInstitutionId(instId) returns (string memory) {
