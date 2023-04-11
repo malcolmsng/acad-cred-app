@@ -17,10 +17,12 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
   });
 
   /* 
+  Account 0: Contract Deployer, Chairman
+
   Account 1: Voting Member 1
   Account 2: Voting Member 2
   Account 3: Removed Voting Member 3
-  Account 4: Approved Institution - National University of Singapore
+  Account 4: Approve Institution - National University of Singapore
 
   Account 9: Applicant
   */
@@ -33,7 +35,7 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
       'Singapore',
       '1.290270',
       '103.851959',
-      { from: accounts[1] },
+      { from: accounts[4] },
     );
     await assert.notStrictEqual(makeI1, undefined, 'Failed to add institution');
     truffleAssert.eventEmitted(makeI1, 'add_institution');
@@ -88,15 +90,15 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
     let before_balance = new BigNumber(await web3.eth.getBalance(acceptanceVotingInstance.address)) / oneEth;
     // Attempt to pay less than 5 eth
     await truffleAssert.reverts(
-      acceptanceVotingInstance.payFee(0, accounts[1], { from: accounts[1], value: oneEth }),
+      acceptanceVotingInstance.payFee(0, accounts[9], { from: accounts[9], value: oneEth }),
       'Application fee is 5 ETH',
     );
     // Attempt to pay 5 eth
-    let app_paid = await acceptanceVotingInstance.payFee(0, accounts[1], { from: accounts[1], value: oneEth.multipliedBy(5) });
+    let app_paid = await acceptanceVotingInstance.payFee(0, accounts[9], { from: accounts[9], value: oneEth.multipliedBy(5) });
     truffleAssert.eventEmitted(app_paid, 'applicant_paid');
     // Attempt to pay again
     await truffleAssert.reverts(
-      acceptanceVotingInstance.payFee(0, accounts[1], { from: accounts[1], value: oneEth.multipliedBy(5) }),
+      acceptanceVotingInstance.payFee(0, accounts[9], { from: accounts[9], value: oneEth.multipliedBy(5) }),
       'Applicant fee has been paid',
     );
     let after_balance = new BigNumber(await web3.eth.getBalance(acceptanceVotingInstance.address)) / oneEth;
