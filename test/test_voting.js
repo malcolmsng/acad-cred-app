@@ -4,14 +4,6 @@ const BigNumber = require('bignumber.js'); // npm install bignumber.js
 var assert = require('assert');
 
 const oneEth = new BigNumber(1000000000000000000); // 1 eth
-const zeroAddress = '0x0000000000000000000000000000000000000000';
-
-const toUnixTime = (year, month, day) => {
-  const date = new Date(Date.UTC(year, month - 1, day));
-  return Math.floor(date.getTime() / 1000);
-};
-
-const toDate = unixTimestamp => new Date(unixTimestamp * 1000);
 
 var AcceptanceVoting = artifacts.require('../contracts/AcceptanceVoting.sol');
 var Credential = artifacts.require('../contracts/Credential.sol');
@@ -30,7 +22,7 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
   Account 1: Voting Member 1
   Account 2: Voting Member 2
   Account 3: Removed Voting Member 3
-  Account 4: Approve Institution - National University of Singapore
+  Account 4: Approved Institution - National University of Singapore
 
   Account 9: Applicant
   */
