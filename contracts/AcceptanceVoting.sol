@@ -85,8 +85,6 @@ contract AcceptanceVoting {
   event remove_committee_member(address committeeMember, uint256 committeeSize);
   event new_committee_size(uint256 size);
 
-
-
   constructor(uint256 fee, uint256 voteDuration) {
     committeeChairman = msg.sender;
     committeeSize = 10;
@@ -94,6 +92,7 @@ contract AcceptanceVoting {
     votingTimeframe = voteDuration;
     addCommitteeMember(msg.sender);
   }
+
   /**
     @dev Check if chairman msg.sender is chairman
    */
@@ -104,6 +103,7 @@ contract AcceptanceVoting {
     );
     _;
   }
+
   /**
     @dev Register an applicant to the voting process
     @param applicantNumber The id of the applicant
@@ -120,6 +120,7 @@ contract AcceptanceVoting {
     applicantVoteScore[applicantNumber] = 0;
     applicantVotingState[applicantNumber] = VotingState.CLOSED;
   }
+
   /**
     @dev Vote for applicant in the voting process by verfied institutions based on 5 factors
     @param applicantNumber The id of the applicant
@@ -203,6 +204,7 @@ contract AcceptanceVoting {
     // Emit event
     emit vote_open(applicantNumber, block.number);
   }
+
   /**
     @dev Used by chairman to end voting process for an applicant
     @param applicantNumber The id of the applicant
@@ -250,6 +252,7 @@ contract AcceptanceVoting {
 
     emit vote_close(applicantNumber, block.number);
   }
+
   /**
     @dev Distribute rewards to voters proportionately
     @param applicantNumber The id of the applicant
@@ -281,6 +284,7 @@ contract AcceptanceVoting {
       }
     }
   }
+
   /**
     @dev Change voting deadline for every applicant
     @param votingDuration new voting duration in ethereum blocks
