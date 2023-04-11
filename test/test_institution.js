@@ -132,7 +132,7 @@ contract('Institution Contract Unit Test', function (accounts) {
     // Set up voting committee
     await acceptanceVotingInstance.addCommitteeMember(accounts[4]);
     await acceptanceVotingInstance.addCommitteeMember(accounts[5]);
-    // 5 Eth applicant payment for voting 
+    // 5 Eth applicant payment for voting
     await acceptanceVotingInstance.payFee(0, accounts[1], { from: accounts[1], value: oneEth.multipliedBy(5) });
     // Vote to approve institution
     await acceptanceVotingInstance.openVote(0);

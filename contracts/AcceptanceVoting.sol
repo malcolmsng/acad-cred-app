@@ -94,7 +94,7 @@ contract AcceptanceVoting {
   }
 
   /**
-    @dev Check if chairman msg.sender is chairman
+    @dev Check if msg.sender is chairman
    */
   modifier isChairman() {
     require(
@@ -257,10 +257,9 @@ contract AcceptanceVoting {
   function distributeFee(uint256 applicantNumber) public payable isChairman {
     require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
     require(isConcluded[applicantNumber] == true, "Voting has not concluded");
+
     // Divide the application fee equally among all committee members
     // members => applicant => true if voted
-    // mapping(address => mapping(uint256 => bool)) hasVoted;
-    // address[] memory memberVoted;
     uint256 membersVotedLength;
     for (uint256 i = 0; i < committeeMembers.length; i++) {
       if (hasVoted[committeeMembers[i]][applicantNumber]) {
@@ -287,7 +286,7 @@ contract AcceptanceVoting {
     @param votingDuration new voting duration in ethereum blocks
    */
   function changeDeadline(uint256 votingDuration) public isChairman {
-    require(votingDuration >= 50400, "Voting duration must be at least 1 week");
+    // require(votingDuration >= 50400, "Voting duration must be at least 1 week");
     votingTimeframe = votingDuration;
   }
 
@@ -296,7 +295,7 @@ contract AcceptanceVoting {
     @param size new committee size
    */
   function changeCommitteeSize(uint32 size) public isChairman {
-    require(size >= 3, "Committee size must be at least 3");
+    // require(size >= 3, "Committee size must be at least 3");
     committeeSize = size;
     emit new_committee_size(size);
   }
@@ -350,6 +349,8 @@ contract AcceptanceVoting {
     emit new_chairman(user);
   }
 
+  ///////////// Getter Functions /////////////
+
   function getCommitteeChairman() public view returns (address) {
     return committeeChairman;
   }
@@ -364,7 +365,7 @@ contract AcceptanceVoting {
     return applicantName[applicantNumber];
   }
 
-  // will return the index of the voting state
+  // Returns the index of the voting state
   // i.e. VotingState.OPEN == 0
   function getVotingState(
     uint256 applicantNumber

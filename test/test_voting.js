@@ -166,5 +166,4 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
     assert.strictEqual(balance1_final - balance1_init > 2.49, true, 'Distribute Fee not working for account 1');
     assert.strictEqual(balance2_final - balance2_init > 2.49, true, 'Distribute Fee not working for account 2');
   });
-
 });
