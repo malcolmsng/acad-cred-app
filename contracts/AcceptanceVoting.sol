@@ -286,6 +286,7 @@ contract AcceptanceVoting {
     @param votingDuration new voting duration in ethereum blocks
    */
   function changeDeadline(uint256 votingDuration) public isChairman {
+    // Uncomment require line below during production, commented out for testing
     // require(votingDuration >= 50400, "Voting duration must be at least 1 week");
     votingTimeframe = votingDuration;
   }
@@ -295,7 +296,7 @@ contract AcceptanceVoting {
     @param size new committee size
    */
   function changeCommitteeSize(uint32 size) public isChairman {
-    // require(size >= 3, "Committee size must be at least 3");
+    require(size >= 3, "Committee size must be at least 3");
     committeeSize = size;
     emit new_committee_size(size);
   }
