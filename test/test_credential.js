@@ -285,7 +285,16 @@ contract('Credential Contract Unit Test', function (accounts) {
 
     await assert.strictEqual(
       credentialView,
-      `ID: 2\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Computer Science\nDegree Level: Bachelor of Computing\nEndorser Name: Dr Tan Keng Soon\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\n`,
+      `ID: 2
+Student Name: Remus Kwan
+Student Number: A0223344L
+Course Name: Computer Science
+Degree Level: Bachelor of Computing
+Endorser Name: Dr Tan Keng Soon
+Issuer Name: National University of Singapore
+Issuance Date: 1679788800
+Expiry Date: 1839888000
+State: ACTIVE\n`,
       'Student credential info is not correct',
     );
   });
@@ -312,7 +321,26 @@ contract('Credential Contract Unit Test', function (accounts) {
 
     await assert.strictEqual(
       studentCredentials,
-      `ID: 2\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Computer Science\nDegree Level: Bachelor of Computing\nEndorser Name: Dr Tan Keng Soon\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\nID: 3\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Business Analytics\nDegree Level: Bachelor of Business Administration\nEndorser Name: Dr Bock See\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\n`,
+      `ID: 2
+Student Name: Remus Kwan
+Student Number: A0223344L
+Course Name: Computer Science
+Degree Level: Bachelor of Computing
+Endorser Name: Dr Tan Keng Soon
+Issuer Name: National University of Singapore
+Issuance Date: 1679788800
+Expiry Date: 1839888000
+State: ACTIVE
+ID: 3
+Student Name: Remus Kwan
+Student Number: A0223344L
+Course Name: Business Analytics
+Degree Level: Bachelor of Business Administration
+Endorser Name: Dr Bock See
+Issuer Name: National University of Singapore
+Issuance Date: 1679788800
+Expiry Date: 1839888000
+State: ACTIVE\n`,
       'Student credential info is not correct',
     );
   });
@@ -340,7 +368,17 @@ contract('Credential Contract Unit Test', function (accounts) {
 
     await assert.strictEqual(
       studentCredentials,
-      `Credential for student Keith Chan has been revoked\nID: 4\nStudent Name: Keith Chan\nStudent Number: A0654321K\nCourse Name: Law\nDegree Level: Bachelor of Laws\nEndorser Name: Dr Lee Tiong Tsu\nIssuance Date: 1679356800\nExpiry Date: 0\nState: ACTIVE\n`,
+      `Credential for student Keith Chan has been revoked
+ID: 4
+Student Name: Keith Chan
+Student Number: A0654321K
+Course Name: Law
+Degree Level: Bachelor of Laws
+Endorser Name: Dr Lee Tiong Tsu
+Issuer Name: National University of Singapore
+Issuance Date: 1679356800
+Expiry Date: 0
+State: ACTIVE\n`,
       'Student credential info is not correct',
     );
   });
@@ -371,7 +409,37 @@ contract('Credential Contract Unit Test', function (accounts) {
 
     await assert.strictEqual(
       allStudentCredentials,
-      `Credential for student Keith Chan has been revoked\nID: 2\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Computer Science\nDegree Level: Bachelor of Computing\nEndorser Name: Dr Tan Keng Soon\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\nID: 3\nStudent Name: Remus Kwan\nStudent Number: A0223344L\nCourse Name: Business Analytics\nDegree Level: Bachelor of Business Administration\nEndorser Name: Dr Bock See\nIssuance Date: 1679788800\nExpiry Date: 1839888000\nState: ACTIVE\nID: 4\nStudent Name: Keith Chan\nStudent Number: A0654321K\nCourse Name: Law\nDegree Level: Bachelor of Laws\nEndorser Name: Dr Lee Tiong Tsu\nIssuance Date: 1679356800\nExpiry Date: 0\nState: ACTIVE\n`,
+      `Credential for student Keith Chan has been revoked
+ID: 2
+Student Name: Remus Kwan
+Student Number: A0223344L
+Course Name: Computer Science
+Degree Level: Bachelor of Computing
+Endorser Name: Dr Tan Keng Soon
+Issuer Name: National University of Singapore
+Issuance Date: 1679788800
+Expiry Date: 1839888000
+State: ACTIVE
+ID: 3
+Student Name: Remus Kwan
+Student Number: A0223344L
+Course Name: Business Analytics
+Degree Level: Bachelor of Business Administration
+Endorser Name: Dr Bock See
+Issuer Name: National University of Singapore
+Issuance Date: 1679788800
+Expiry Date: 1839888000
+State: ACTIVE
+ID: 4
+Student Name: Keith Chan
+Student Number: A0654321K
+Course Name: Law
+Degree Level: Bachelor of Laws
+Endorser Name: Dr Lee Tiong Tsu
+Issuer Name: National University of Singapore
+Issuance Date: 1679356800
+Expiry Date: 0
+State: ACTIVE\n`,
       'Student credential info is not correct',
     );
   });
