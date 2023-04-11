@@ -85,9 +85,7 @@ contract AcceptanceVoting {
   event remove_committee_member(address committeeMember, uint256 committeeSize);
   event new_committee_size(uint256 size);
 
-  // should the person who deploys the contract be the chairman?
-  // or should we allocate the chairman
-  // committee max size 10 to begin with
+
 
   constructor(uint256 fee, uint256 voteDuration) {
     committeeChairman = msg.sender;
@@ -96,7 +94,9 @@ contract AcceptanceVoting {
     votingTimeframe = voteDuration;
     addCommitteeMember(msg.sender);
   }
-
+  /**
+    @dev Check if chairman msg.sender is chairman
+   */
   modifier isChairman() {
     require(
       msg.sender == committeeChairman,
@@ -104,7 +104,12 @@ contract AcceptanceVoting {
     );
     _;
   }
-
+  /**
+    @dev Register an applicant to the voting process
+    @param applicantNumber The id of the applicant
+    @param _applicantAddress The address of the applicant
+    @param _applicantName The name of the applicant's institution
+   */
   function addApplicant(
     uint256 applicantNumber,
     address _applicantAddress,
@@ -115,7 +120,15 @@ contract AcceptanceVoting {
     applicantVoteScore[applicantNumber] = 0;
     applicantVotingState[applicantNumber] = VotingState.CLOSED;
   }
-
+  /**
+    @dev Vote for applicant in the voting process by verfied institutions based on 5 factors
+    @param applicantNumber The id of the applicant
+    @param hasPhyiscalPremise Whether the applicant has a phyiscal premise
+    @param hasWebPresence Whether the applicant has a website/ social media on the web
+    @param hasResearch Whether the applicant has produced any research 
+    @param hasAwards Whether the applicant has won any awards
+    @param hasStudentMarketing Whether the applicant has any student marketing
+   */
   function vote(
     uint256 applicantNumber,
     bool hasPhyiscalPremise,
@@ -155,6 +168,11 @@ contract AcceptanceVoting {
     emit voted(msg.sender, applicantNumber, vote_score);
   }
 
+  /**
+    @dev Used by applicants to pay the application fee
+    @param applicantNumber The id of the applicant
+    @param applicantAdd The address of the applicant
+   */
   function payFee(uint applicantNumber, address applicantAdd) public payable {
     require(msg.value / 1E18 >= applicationFee, "Application fee is 5 ETH");
     require(hasPaid[applicantNumber] == false, "Applicant fee has been paid");
@@ -165,6 +183,10 @@ contract AcceptanceVoting {
     emit applicant_paid(applicantNumber);
   }
 
+  /**
+    @dev Used by chairman to start voting process for an applicant
+    @param applicantNumber The id of the applicant
+   */
   function openVote(uint256 applicantNumber) external isChairman {
     require(
       applicantVotingState[applicantNumber] == VotingState.CLOSED,
@@ -181,7 +203,12 @@ contract AcceptanceVoting {
     // Emit event
     emit vote_open(applicantNumber, block.number);
   }
-
+  /**
+    @dev Used by chairman to end voting process for an applicant
+    @param applicantNumber The id of the applicant
+    @param scoreNeeded The percentage of the maximum score needed 
+    for an applicant to pass the vote
+   */
   function closeVote(
     uint256 applicantNumber,
     uint256 scoreNeeded
@@ -223,7 +250,10 @@ contract AcceptanceVoting {
 
     emit vote_close(applicantNumber, block.number);
   }
-
+  /**
+    @dev Distribute rewards to voters proportionately
+    @param applicantNumber The id of the applicant
+   */
   function distributeFee(uint256 applicantNumber) public payable isChairman {
     require(hasPaid[applicantNumber] == true, "Applicant has not paid fee");
     require(isConcluded[applicantNumber] == true, "Voting has not concluded");
@@ -251,20 +281,29 @@ contract AcceptanceVoting {
       }
     }
   }
-
+  /**
+    @dev Change voting deadline for every applicant
+    @param votingDuration new voting duration in ethereum blocks
+   */
   function changeDeadline(uint256 votingDuration) public isChairman {
+    require(votingDuration >= 50400, "Voting duration must be at least 1 week");
     votingTimeframe = votingDuration;
   }
 
-  function changeFee(uint256 fee) public isChairman {
-    applicationFee = fee;
-  }
-
+  /**
+    @dev Change max number of members in committee
+    @param size new committee size
+   */
   function changeCommitteeSize(uint32 size) public isChairman {
+    require(size >= 3, "Committee size must be at least 3");
     committeeSize = size;
     emit new_committee_size(size);
   }
 
+  /**
+    @dev Add voter to the committee
+    @param user Address of new member
+   */
   function addCommitteeMember(address user) public isChairman {
     require(
       committeeMembers.length < committeeSize,
@@ -279,6 +318,10 @@ contract AcceptanceVoting {
     emit new_committee_member(user, committeeMembers.length);
   }
 
+  /**
+    @dev Remove a committee member from the committee
+    @param user Address of member to be removed
+   */
   function removeCommitteeMember(address user) public isChairman {
     require(isCommitteeMember[user], "User is not a current committee Member");
     require(committeeMembers.length > 0, "Committee is empty");
@@ -297,6 +340,10 @@ contract AcceptanceVoting {
     emit remove_committee_member(user, committeeMembers.length);
   }
 
+  /**
+    @dev Change the chairman of the committee 
+    @param user Address of new chairman
+   */
   function changeChairman(address user) public isChairman {
     committeeChairman = user;
     emit new_chairman(user);
