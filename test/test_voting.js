@@ -43,13 +43,13 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
 
   it('Add member', async () => {
     // Add member
-    let makeM1 = await acceptanceVotingInstance.addCommitteeMember(accounts[1]);
+    let makeM1 = await acceptanceVotingInstance.addCommitteeMember(accounts[1], { from: accounts[0] });
     truffleAssert.eventEmitted(makeM1, 'new_committee_member');
 
-    let makeM2 = await acceptanceVotingInstance.addCommitteeMember(accounts[2]);
+    let makeM2 = await acceptanceVotingInstance.addCommitteeMember(accounts[2], { from: accounts[0] });
     truffleAssert.eventEmitted(makeM2, 'new_committee_member');
 
-    let makeM3 = await acceptanceVotingInstance.addCommitteeMember(accounts[3]);
+    let makeM3 = await acceptanceVotingInstance.addCommitteeMember(accounts[3], { from: accounts[0] });
     truffleAssert.eventEmitted(makeM3, 'new_committee_member');
 
     cMembers = await acceptanceVotingInstance.getAmountOfCommitteeMembers();
@@ -64,12 +64,15 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
     );
 
     // Current members cannot be added again
-    await truffleAssert.reverts(acceptanceVotingInstance.addCommitteeMember(accounts[3]), 'User is already a current committee Member');
+    await truffleAssert.reverts(
+      acceptanceVotingInstance.addCommitteeMember(accounts[3], { from: accounts[0] }),
+      'User is already a current committee Member',
+    );
   });
 
   it('Remove member', async () => {
     // Add member
-    let makeM3 = await acceptanceVotingInstance.removeCommitteeMember(accounts[3]);
+    let makeM3 = await acceptanceVotingInstance.removeCommitteeMember(accounts[3], { from: accounts[0] });
     truffleAssert.eventEmitted(makeM3, 'remove_committee_member');
     cMembers = await acceptanceVotingInstance.getAmountOfCommitteeMembers();
     await assert.strictEqual(cMembers.toNumber(), 3, 'Add Committee Member does not work');
@@ -83,7 +86,10 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
     );
 
     // non-members cannot be removed again
-    await truffleAssert.reverts(acceptanceVotingInstance.removeCommitteeMember(accounts[5]), 'User is not a current committee Member');
+    await truffleAssert.reverts(
+      acceptanceVotingInstance.removeCommitteeMember(accounts[5], { from: accounts[0] }),
+      'User is not a current committee Member',
+    );
   });
 
   it('Applicant pays fee to begin acceptance process', async () => {
@@ -116,9 +122,9 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
 
   it('Open vote', async () => {
     // Open vote
-    let makeO1 = await acceptanceVotingInstance.openVote(0);
+    let makeO1 = await acceptanceVotingInstance.openVote(0, { from: accounts[0] });
     truffleAssert.eventEmitted(makeO1, 'vote_open');
-    let vstate01 = await acceptanceVotingInstance.getVotingState(0);
+    let vstate01 = await acceptanceVotingInstance.getVotingState(0, { from: accounts[0] });
     assert.strictEqual(vstate01.toString(), '0', 'Failed to open vote');
   });
 
@@ -137,7 +143,7 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
 
   it('Cannot close vote before deadline is up', async () => {
     // Too early to close vote
-    await truffleAssert.reverts(acceptanceVotingInstance.closeVote(0, 9), 'Deadline not up');
+    await truffleAssert.reverts(acceptanceVotingInstance.closeVote(0, 9, { from: accounts[0] }), 'Deadline not up');
   });
 
   it('Check vote close function, approved status and distribute fee function', async () => {
@@ -146,11 +152,11 @@ contract('AcceptanceVoting Contract Unit Test', function (accounts) {
     let balance2_init = new BigNumber(await web3.eth.getBalance(accounts[2])) / oneEth;
     await acceptanceVotingInstance.changeDeadline(0);
     let contract_before_balance = new BigNumber(await web3.eth.getBalance(acceptanceVotingInstance.address)) / oneEth;
-    await acceptanceVotingInstance.closeVote(0, 9);
+    await acceptanceVotingInstance.closeVote(0, 9, { from: accounts[0] });
 
     // Check approved status
-    await institutionInstance.updateInstitutionStatus(0);
-    let makeS1 = await institutionInstance.getInstitutionState(0);
+    await institutionInstance.updateInstitutionStatus(0, { from: accounts[0] });
+    let makeS1 = await institutionInstance.getInstitutionState(0, { from: accounts[0] });
     assert.equal(makeS1.toString(), '0', 'Failed to approve institution');
 
     // Check distribution fee function
