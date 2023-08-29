@@ -1,5 +1,6 @@
 # Academic Credential App
-
+Architecture and Design Document
+https://docs.google.com/document/d/1AVUhcie2xlCitbXwlB-xDLjyHRMd0qOYrPwDXMzsWuQ/edit?usp=sharing 
 ## Setup
 
 1. Install dependencies
